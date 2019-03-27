@@ -79,20 +79,23 @@ class RoomComponent extends React.Component<Props, State> {
                             <TableCell>Edit Date</TableCell>
                             <TableCell>Status</TableCell>
                             <TableCell>
-                                <Button color="secondary" onClick={this.openAddRoomDialog.bind(this)}>Add room</Button>
+                                <Button color="secondary" onClick={this.openAddRoomDialog.bind(this)}>Add</Button>
                             </TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         {rooms.map((room: Room) => {
+                            const createdAt = new Date(room.createdAt);
+                            const updatedAt = new Date(room.updatedAt);
+
                             return (
                                 <TableRow>
                                     {/* <TableCell align="right">{room._id}</TableCell> */}
                                     <TableCell align="right">{room.name}</TableCell>
-                                    <TableCell align="right">{room.createdAt}</TableCell>
-                                    <TableCell align="right">{room.updatedAt}</TableCell>
+                                    <TableCell align="right">{createdAt.toLocaleString()}</TableCell>
+                                    <TableCell align="right">{updatedAt.toLocaleString()}</TableCell>
                                     <TableCell align="right">{room.status}</TableCell>
-                                    <TableCell align="right"></TableCell>
+                                    <TableCell align="right"><Button>Edit</Button></TableCell>
                                 </TableRow>
                             );
                         })}

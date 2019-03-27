@@ -67,6 +67,8 @@ class ChatComponent extends React.Component<Props, State> {
     }
 
     openRoomDialog() {
+        this.getRooms();
+
         this.setState({
             roomDialogOpen: true
         });
@@ -80,10 +82,12 @@ class ChatComponent extends React.Component<Props, State> {
 
     getRooms() {
         RoomService.findAll((rooms) => {
-            console.log(rooms);
+            this.setState({
+                rooms
+            });
         }, () => {
             console.log("Something went wrong");
-        })
+        });
     }
 
     render() {
@@ -105,6 +109,7 @@ class ChatComponent extends React.Component<Props, State> {
                                             </Avatar>
                                         </ListItemAvatar>
                                         <ListItemText primary={room.name}></ListItemText>
+                                        
                                     </ListItem>
                                 );
                             })}
