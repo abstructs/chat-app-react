@@ -7,6 +7,7 @@ export enum RoomStatus {
 }
 
 export interface RoomForm {
+    _id: string | null,
     name: string,
     status: string
 }
@@ -43,6 +44,17 @@ export class RoomService extends Service {
         }
 
         axios.post(`${super.getApiUrl()}/room`, payload,
+            { headers: { ...super.getAuthHeader() }})
+        .then(onSuccess)
+        .catch(onReject);
+    }
+
+    public static edit(roomForm: RoomForm, onSuccess: () => void, onReject: (reason: any) => void) {
+        const payload = {
+            room: roomForm
+        }
+
+        axios.put(`${super.getApiUrl()}/room`, payload,
             { headers: { ...super.getAuthHeader() }})
         .then(onSuccess)
         .catch(onReject);

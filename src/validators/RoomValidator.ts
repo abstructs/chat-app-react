@@ -15,12 +15,10 @@ export class RoomValidator extends Validator {
         let statusErrors: string[] = [];
 
         if(this.isEmpty(name)) {
-            nameErrors.push("Username cannot be empty");
+            nameErrors.push("Name cannot be empty");
         }
 
-        if(this.isEmpty(status)) {
-            statusErrors.push("Password cannot be empty");
-        }
+        statusErrors.concat(this.validateStatus(status));
 
         return new Promise((resolve, reject) => {
             RoomService.validRoomName(name, () => {
@@ -32,21 +30,28 @@ export class RoomValidator extends Validator {
             })
             
         });
+    
     }
 
-    // private static getUsernameErrors(username: string): string[] {
-    //     const errors = [];
 
-    //     if(this.isEmpty(username)) {
-    //         errors.push("Username cannot be empty");
-    //     }
 
-    //     // if(!this.validLength(username, 3, 15)) {
-    //     //     errors.push("Username is ");
-    //     // }
+    public static validateStatus(status: string): string[] {
+        const errors = [];
 
-    //     return [];
-    // }
+        if(this.isEmpty(status)) {
+            errors.push("Status cannot be empty");
+        }
+
+        if(status != "active" && status != "inactive") {
+            errors.push("Status invalid");
+        }
+
+        // if(!this.validLength(username, 3, 15)) {
+        //     errors.push("Username is ");
+        // }
+
+        return errors;
+    }
 
     // private static getPasswordErrors(email: string): string[] {
     //     return [];

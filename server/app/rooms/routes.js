@@ -83,6 +83,54 @@ router.post('/', validRoomName, authorizeUser, (req, res) => {
         res.status(400).send({ errors: { room: "Expected a room." }});
     }
 });
+
+router.put('/', authorizeUser, (req, res) => {
+    const room = req.body.room;
+
+    const { _id, status } = room;
+
+    Room.findOne({ _id }, (err, room) => {
+        if(err) {
+            console.trace(err);
+            res.status(500).send();
+            return;
+        }
+
+        if(room == null) {
+            console.trace(err);
+            res.status(404).send({ error: "Not Found" });
+            return;
+        }
+
+        room.status = status;
+
+        room.save();
+
+        res.status(200).send({ success: "Room updated" });
+    });
+    
+    // if(req.body.room) {
+        
+
+    //     const user_id = res.locals.user_id;
+
+    //     room.user = user_id;
+
+    //     // consume user id
+    //     res.locals.user_id = undefined;
+
+    //     room.save(err => {
+    //         if(err) {
+    //             console.trace(err);
+    //             throw err;
+    //         }
+    
+    //         res.status(200).send({ success: "Successfully added room.", room });
+    //     });
+    // } else {
+    //     res.status(400).send({ errors: { room: "Expected a room." }});
+    // }
+});
  
 router.get('/', (req, res) => {
     Room.find({})

@@ -1,9 +1,11 @@
 import React from 'react';
 
 import { Dialog, Theme, Table, TableHead, TableRow, TableCell, TableBody, Button, Fab, withStyles, DialogTitle, List } from '@material-ui/core';
-import { Room, RoomService } from '../services/RoomService';
+import { Room, RoomService, RoomForm } from '../services/RoomService';
 import AddIcon from '@material-ui/icons/Add';
-import AddRoomComponent from './AddRoomComponent';
+import RoomDialogComponent, { DialogMode } from './RoomDialogComponent';
+
+const emptyRoom: RoomForm = {_id: null, name: "", status: "active"};
 
 const styles = ({ palette, spacing }: Theme) => ({
     fab: {
@@ -13,7 +15,9 @@ const styles = ({ palette, spacing }: Theme) => ({
 
 interface State {
     rooms: Room[],
-    addRoomDialogOpen: boolean
+    roomDialogOpen: boolean,
+    roomDialogMode: DialogMode,
+    selectedRoom: RoomForm
 }
 
 interface Props {
@@ -28,7 +32,9 @@ class RoomComponent extends React.Component<Props, State> {
 
         this.state = {
             rooms: [],
-            addRoomDialogOpen: false
+            roomDialogOpen: false,
+            roomDialogMode: DialogMode.ADD,
+            selectedRoom: emptyRoom
         }
 
         this.populateRooms();
@@ -41,14 +47,15 @@ class RoomComponent extends React.Component<Props, State> {
                 rooms
             });
         }, () => {
-            console.log("Error")
+            console.log("Error");
         })
     }
 
-    handleAddRoomDialogClose(refresh: boolean = false) {
+    handleRoomDialogClose(refresh: boolean = false) {
         this.setState({
             ...this.state,
-            addRoomDialogOpen: false
+            roomDialogOpen: false,
+            selectedRoom: emptyRoom
         });
 
         if(refresh) {
@@ -56,20 +63,22 @@ class RoomComponent extends React.Component<Props, State> {
         }
     }
 
-    openAddRoomDialog() {
+    openRoomDialog(mode: DialogMode, room: RoomForm) {
         this.setState({
-            addRoomDialogOpen: true
+            roomDialogOpen: true,
+            roomDialogMode: mode,
+            selectedRoom: room
         });
     }
 
     render() {
 
         const { classes } = this.props;
-        const { addRoomDialogOpen, rooms } = this.state;
+        const { roomDialogOpen, rooms, roomDialogMode, selectedRoom } = this.state;
 
         return (
             <div>
-                <AddRoomComponent open={addRoomDialogOpen} handleClose={this.handleAddRoomDialogClose.bind(this)} />
+                <RoomDialogComponent room={selectedRoom} dialogMode={roomDialogMode} open={roomDialogOpen} handleClose={this.handleRoomDialogClose.bind(this)} />
                 <Table>
                     <TableHead>
                         <TableRow>
@@ -79,7 +88,7 @@ class RoomComponent extends React.Component<Props, State> {
                             <TableCell>Edit Date</TableCell>
                             <TableCell>Status</TableCell>
                             <TableCell>
-                                <Button color="secondary" onClick={this.openAddRoomDialog.bind(this)}>Add</Button>
+                                <Button color="secondary" onClick={() => this.openRoomDialog(DialogMode.ADD, emptyRoom)}>Add</Button>
                             </TableCell>
                         </TableRow>
                     </TableHead>
@@ -95,7 +104,7 @@ class RoomComponent extends React.Component<Props, State> {
                                     <TableCell align="right">{createdAt.toLocaleString()}</TableCell>
                                     <TableCell align="right">{updatedAt.toLocaleString()}</TableCell>
                                     <TableCell align="right">{room.status}</TableCell>
-                                    <TableCell align="right"><Button>Edit</Button></TableCell>
+                                    <TableCell align="right"><Button onClick={() => this.openRoomDialog(DialogMode.EDIT, room)}>Edit</Button></TableCell>
                                 </TableRow>
                             );
                         })}
