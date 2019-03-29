@@ -32,6 +32,11 @@ export class ChatService extends Service {
         this.socket.on("disconnect", onDisconnect);
 
         this.socket.on("newMessage", onMessage);
+
+        this.socket.on("roomInactive", () => {
+            console.log("Room inactive");
+            onDisconnect();
+        })
     }
 
     connectToRoom(roomName: string, username: string): Promise<Boolean> {

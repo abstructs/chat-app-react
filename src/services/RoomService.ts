@@ -32,6 +32,15 @@ export class RoomService extends Service {
         .catch(onReject);
     }
 
+    public static findAllAuth(onSuccess: (rooms: Room[]) => void, onReject: (reason: any) => void) {
+        axios.post(`${super.getApiUrl()}/room/getRooms`, {},
+            { headers: { ...super.getAuthHeader() }})
+        .then(res => {
+            onSuccess(res.data.rooms);
+        })
+        .catch(onReject);
+    }
+
     public static roomExists(name: string, onSuccess: () => void, onReject: (reason: any) => void) {
         axios.get(`${super.getApiUrl()}/room/exists/${name}`)
         .then(onSuccess)

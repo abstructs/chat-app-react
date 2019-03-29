@@ -97,11 +97,35 @@ router.put('/', authorizeUser, (req, res) => {
 
         room.save();
 
+        if(room.status == "inactive") {
+            const io = req.app.get("socketio");
+
+            io.in(room.name).emit("roomInactive");
+
+            io.on("roomInactive", () => {
+                console.log("wtf");
+            })
+        }
+
         res.status(200).send({ success: "Room updated" });
     });
 });
  
 router.get('/', (req, res) => {
+    Room.find({ status: "active" })
+        .populate('user', 'username')
+        .select('-password')
+        .exec((err, rooms) => {
+            if(err) {
+                console.trace(err);
+                throw err;
+            }
+
+            res.status(200).send({ rooms });
+        });
+});
+
+router.post('/getRooms', authorizeUser, (req, res) => {
     Room.find({})
         .populate('user', 'username')
         .select('-password')
@@ -114,6 +138,7 @@ router.get('/', (req, res) => {
             res.status(200).send({ rooms });
         });
 });
+
 
 router.get('/exists/:name', (req, res) => {
     const roomName = req.params.name;

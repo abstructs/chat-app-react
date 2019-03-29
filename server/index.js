@@ -120,13 +120,13 @@ io.on('connection', (socket) => {
                 return;
             }
 
-            if(room == null) {
-                socket.emit("invalidRoom");
+            if(room == null || room.status === "inactive") {
+                socket.emit("error");
                 return;
             } 
 
             if(chatCache.roomInCache(room.name) && chatCache.usernameExistsInRoom(room.name, username) || !validChatUsername(username)) {
-                socket.emit("invalidUsername");
+                socket.emit("error");
                 return;
             }
 
@@ -194,17 +194,13 @@ const port = process.env.PORT || 8000;
 app.use(cors());
 app.use(bodyParser.json());
 
+app.set('socketio', io);
+
 app.use('/user', require('./app/users/routes'));
 app.use('/room', require('./app/rooms/routes'));
 
 app.get('/chat/users/:roomName', (req, res) => {
     const roomName = req.params.roomName;
-
-    // const room = io.sockets.adapter.rooms[roomName];
-    // console.log("called")
-    // console.log(roomName)
-    // console.log(chatCache.getConnectedUsers(roomName))
-    // console.log(chatCache);
 
     if(chatCache.roomInCache(roomName)) {
         const usernames = chatCache.getConnectedUsers(roomName);

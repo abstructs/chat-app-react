@@ -41,8 +41,7 @@ class RoomComponent extends React.Component<Props, State> {
     }
 
     populateRooms() {
-        RoomService.findAll((rooms: Room[]) => {
-            console.log(rooms);
+        RoomService.findAllAuth((rooms: Room[]) => {
             this.setState({
                 rooms
             });

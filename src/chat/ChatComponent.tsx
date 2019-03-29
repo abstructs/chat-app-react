@@ -39,7 +39,7 @@ const styles = ({ spacing, palette }: Theme) => ({
         // flexWrap: 'wrap'
     },
     fab: {
-        margin: spacing.unit * 3
+        margin: spacing.unit * 2
     },
     title: {
         margin: spacing.unit * 3
