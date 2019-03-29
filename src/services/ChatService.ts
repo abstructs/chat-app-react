@@ -19,14 +19,23 @@ export class ChatService extends Service {
 
     private socket: SocketIOClient.Socket;
 
-    constructor() {
+    constructor(onMessage: (message: ChatMessage) => void, onDisconnect: () => void) {
         super();
 
         this.socket = io.connect(`${super.getApiUrl()}`);
+
+        this.socket.on("error", () => {
+            this.socket.removeAllListeners();
+            console.log("Socket error");
+        });
+
+        this.socket.on("disconnect", onDisconnect);
+
+        this.socket.on("newMessage", onMessage);
     }
 
     connectToRoom(roomName: string, username: string): Promise<Boolean> {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve, _) => {
             this.socket.emit("connectToRoom", { roomName, username });
 
             this.socket.on("joinedRoom", () => {
@@ -40,15 +49,22 @@ export class ChatService extends Service {
                 this.socket.removeListener("invalidRoom");
                 resolve(false);
             });
-
-            this.socket.on("error", () => {
-                this.socket.removeListener("joinedRoom");
-                this.socket.removeListener("invalidRoom");
-                reject();
-            });
         })
+    }
 
+    sendMessage(message: string) {
+        this.socket.emit("message", { message });
+    }
 
+    leaveRoom(roomName: string, username: string): Promise<Boolean> {
+        return new Promise((resolve, reject) => {
+            this.socket.emit("leaveRoom", { username, roomName });
+
+            this.socket.on("leftRoom", () => {
+                this.socket.removeListener("leftRoom");
+                resolve(true);
+            });
+        });
     }
 
     validChatUsername(roomName: string, username: string): Promise<Boolean> {
@@ -56,16 +72,16 @@ export class ChatService extends Service {
             this.socket.emit("validChatUsername", { roomName, username });
 
             this.socket.on("validUsername", () => {
+                this.socket.removeListener("validUsername");
+                this.socket.removeListener("invalidUsername");
                 resolve(true);
             });
 
-            this.socket.on("inValidUsername", () => {
+            this.socket.on("invalidUsername", () => {
+                this.socket.removeListener("validUsername");
+                this.socket.removeListener("invalidUsername");
                 resolve(false);
             })
-
-            this.socket.on("error", () => {
-                reject();
-            });
         });
     }
 
@@ -105,7 +121,8 @@ export class ChatService extends Service {
     //     this.socket.emit('message', { message });
     // }
 
-    // viewConnected(roomName): Observable<String[]> {
+    // viewConnected(roomName): Promise<String[]> {
+
     //     return this.backend.getConnected(roomName).pipe(
     //         map(res => {
     //             const usernames = res['usernames'];

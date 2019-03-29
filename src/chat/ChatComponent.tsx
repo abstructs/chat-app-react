@@ -3,15 +3,18 @@ import { Avatar, Card, Paper, TextField, Typography, withStyles, Grid, CardConte
 import { MuiTheme } from 'material-ui/styles';
 
 import SpeakerNotesIcon from '@material-ui/icons/SpeakerNotes';
+import GroupIcon from '@material-ui/icons/Group';
 
 import RoomIcon from '@material-ui/icons/Chat';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import LeaveIcon from '@material-ui/icons/ExitToApp';
 
 import { Room, RoomService } from '../services/RoomService';
 
-import io from 'socket.io-client';
-import { ChatService } from '../services/ChatService';
+import { ChatService, ChatMessage, MessageType } from '../services/ChatService';
 import JoinRoomDialogComponent from './JoinRoomDialogComponent';
+import { CommunicationStayCurrentLandscape } from 'material-ui/svg-icons';
+import ConnectedDialogComponent from './ConnectedDialogComponent';
 
 const styles = ({ spacing, palette }: Theme) => ({
     root: {
@@ -52,19 +55,16 @@ const styles = ({ spacing, palette }: Theme) => ({
     }
 });
 
-interface Message {
-    user: string,
-    message: string
-}
-
 interface State {
     roomDialogOpen: boolean,
     rooms: Room[],
     messageExpansionOpen: boolean,
     connected: boolean,
     roomName: string,
-    messages: Message[],
-    chatUsername: string
+    messages: ChatMessage[],
+    chatUsername: string,
+    message: string,
+    connectedDialogOpen: boolean
 }
 
 interface Props {
@@ -88,7 +88,7 @@ class ChatComponent extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
         
-        this.chatService = new ChatService();
+        this.chatService = new ChatService(this.onNewMessage.bind(this), this.onClientDisconnect.bind(this));
 
         this.state = {
             roomDialogOpen: false,
@@ -97,7 +97,9 @@ class ChatComponent extends React.Component<Props, State> {
             chatUsername: "",
             roomName: "",
             messages: [],
-            connected: false
+            connected: false,
+            message: "",
+            connectedDialogOpen: false
         }
         
         this.getRooms();
@@ -123,30 +125,81 @@ class ChatComponent extends React.Component<Props, State> {
         });
     }
 
-    joinRoom(roomName: string, username: string) {
-        this.chatService.connectToRoom(roomName, username)
-        .then(connected => {
-            if(connected) {
-                this.setState({
-                    connected: true,
-                    roomName,
-                    chatUsername: username,
-                    roomDialogOpen: false,
-                    messageExpansionOpen: true
-                });
-            } else {
-                this.setState({
-                    connected: false,
-                    roomName: "",
-                    roomDialogOpen: false,
-                    messageExpansionOpen: false
-                });
-            }
+    onLeaveRoom() {
+        this.setState({
+            chatUsername: "",
+            roomName: "",
+            messages: [],
+            connected: false,
+            messageExpansionOpen: false
+        });
+    }
+
+    leaveRoom() {
+        if(this.state.connected) {
+            this.chatService.leaveRoom(this.state.roomName, this.state.chatUsername)
+            .then(this.onLeaveRoom.bind(this));
+        }
+    }
+
+    sendMessage() {
+        this.chatService.sendMessage(this.state.message);
+
+        this.setState({
+            message: ""
+        });
+    }
+
+    onNewMessage(message: ChatMessage) {
+        this.setState({
+            messages: this.state.messages.concat([message])
+        });
+    }
+
+    onClientDisconnect() {
+        this.setState({
+            chatUsername: "",
+            roomName: "",
+            messages: [],
+            connected: false,
+            messageExpansionOpen: false
+        });
+    }
+
+    handleMessageChange(event: React.ChangeEvent<HTMLSelectElement>) {
+        this.setState({
+            message: event.target.value
+        });
+    }
+
+    joinRoom(roomName: string, username: string): Promise<Boolean> {
+        return new Promise((resolve, reject) => {
+            this.chatService.connectToRoom(roomName, username)
+            .then(connected => {
+                if(connected) {
+                    this.setState({
+                        connected: true,
+                        roomName,
+                        chatUsername: username,
+                        roomDialogOpen: false,
+                        messageExpansionOpen: true
+                    }, () => resolve(true));
+                } else {
+                    this.setState({
+                        connected: false,
+                        roomName: ""
+                    }, () => resolve(false));
+                }
+            });
         });
     }
 
     validChatUsername(roomName: string, username: string): Promise<Boolean> {
         return this.chatService.validChatUsername(roomName, username);
+    }
+
+    handleRoomJoin(roomName: string, username: string): Promise<Boolean> {
+        return this.joinRoom(roomName, username);
     }
 
     getRooms() {
@@ -159,49 +212,74 @@ class ChatComponent extends React.Component<Props, State> {
         });
     }
 
+    openConnectedDialog() {
+        this.setState({
+            connectedDialogOpen: true
+        });
+    }
+
+    closeConnectedDialog() {
+        this.setState({
+            connectedDialogOpen: false
+        });
+    }
+
     render() {
         const { classes } = this.props;
-        const { roomDialogOpen, rooms, messageExpansionOpen, connected, roomName, chatUsername } = this.state;
+        const { connectedDialogOpen, message, messages, roomDialogOpen, rooms, messageExpansionOpen, connected, roomName, chatUsername } = this.state;
 
         return ( 
             <div className={classes.root}>
-                <JoinRoomDialogComponent validUsername={this.validChatUsername.bind(this)} rooms={rooms} joinRoom={this.joinRoom.bind(this)} onClose={this.handleRoomDialogClose.bind(this)} open={roomDialogOpen} />
+                <JoinRoomDialogComponent validUsername={this.validChatUsername.bind(this)} rooms={rooms} joinRoom={this.handleRoomJoin.bind(this)} onClose={this.handleRoomDialogClose.bind(this)} open={roomDialogOpen} />
+                <ConnectedDialogComponent roomName={roomName} open={connectedDialogOpen} handleClose={this.closeConnectedDialog.bind(this)} />
 
                 <ExpansionPanel expanded={messageExpansionOpen}>
                     <ExpansionPanelSummary expandIcon={connected && <ExpandMoreIcon onClick={this.toggleMessageExpansion.bind(this)} />}>
                         <Grid container spacing={24} justify="space-between">
-                            <Grid item direction="column">
+                            <Grid item>
                                 <Typography className={classes.title} align="center" variant="h6" gutterBottom>{connected ? `${roomName} - Connected as ${chatUsername}` : "Not Connected"}</Typography>
                             </Grid>
-                            <Grid item direction="column">
-                                <Fab onClick={this.openRoomDialog.bind(this)} size="small" color="primary" className={classes.fab}>
-                                    <SpeakerNotesIcon />
-                                </Fab>
+                            <Grid item>
+                                {!connected && 
+                                    <Fab onClick={this.openRoomDialog.bind(this)} size="small" color="primary" className={classes.fab}>
+                                        <SpeakerNotesIcon />
+                                    </Fab>
+                                }
+                                {connected && 
+                                    <div>
+                                        <Fab onClick={this.openConnectedDialog.bind(this)} size="small" color="primary" className={classes.fab}>
+                                            <GroupIcon />
+                                        </Fab>
+                                        <Fab onClick={this.leaveRoom.bind(this)} size="small" color="secondary" className={classes.fab}>
+                                            <LeaveIcon />
+                                        </Fab>
+                                    </div>
+                                }
                             </Grid>
                         </Grid>
                     </ExpansionPanelSummary>
                     <ExpansionPanelDetails className={classes.block}>
                         <div style={{width: "100%"}}>
                             <List>
-                                <ListItem>
-                                    Andrew: Hi
-                                </ListItem>
-                                <ListItem>
-                                    Andrew: Hi
-                                </ListItem>
-                                <ListItem>
-                                    Andrew: Hi
-                                </ListItem>
+                                {messages.map((message, index) => {
+                                    return (
+                                        <ListItem key={index}>
+                                            {message.type.toString() === "message" && <Typography>{message.username}: {message.message}</Typography> }
+                                            {(message.type.toString() === "join" || message.type.toString() == "disconnect") && <Typography align="center">{message.message}</Typography> }
+                                        </ListItem>
+                                    );
+                                })}
                             </List>
                         </div>
                         <TextField 
                             label="Message"
-                            value=""
+                            value={message}
+                            onChange={this.handleMessageChange.bind(this)}
                             className={classes.textField}
                             fullWidth
                             multiline
                         />
-                        <Button className={classes.sendBtn}>Send</Button>
+                        <Button onClick={this.sendMessage.bind(this)} className={classes.sendBtn}>Send</Button>
                     </ExpansionPanelDetails>
                 </ExpansionPanel>
             </div>

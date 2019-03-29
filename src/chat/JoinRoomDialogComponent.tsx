@@ -5,6 +5,8 @@ import { Room, RoomForm } from '../services/RoomService';
 import AddIcon from '@material-ui/icons/Add';
 import RoomIcon from '@material-ui/icons/Chat';
 import { DarkRawTheme } from 'material-ui/styles';
+import { ChatService } from '../services/ChatService';
+import { ChatValidator } from '../validators/ChatValidator';
 
 
 const emptyRoom: RoomForm = {_id: null, name: "", status: "active"};
@@ -69,25 +71,27 @@ interface Props {
     open: boolean,
     onClose: () => void,
     rooms: Room[],
-    joinRoom: (roomName: string, username: string) => void,
+    joinRoom: (roomName: string, username: string) => Promise<Boolean>,
     validUsername: (roomName: string, username: string) => Promise<Boolean>
 }
+
+const defaultState = {
+    step: 0,
+    joinRoomForm: {
+        roomName: "",
+        username: "",
+    },
+    errors: {
+        roomName: [],
+        username: [],
+    }
+};
 
 class JoinRoomDialogComponent extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
 
-        this.state = {
-            step: 0,
-            joinRoomForm: {
-                roomName: "",
-                username: "",
-            },
-            errors: {
-                roomName: [],
-                username: [],
-            }
-        }
+        this.state = defaultState;
     }
 
     handleClose() {
@@ -101,9 +105,23 @@ class JoinRoomDialogComponent extends React.Component<Props, State> {
                 roomName
             }
         });
-    }
+    }   
+
     handleUsernameNext() {
         const { roomName, username } = this.state.joinRoomForm;
+
+        const syncUsernameErrors = ChatValidator.validateUsername(username);
+
+        if(syncUsernameErrors.length != 0) {
+            this.setState({
+                errors: {
+                    ...this.state.errors,
+                    username: syncUsernameErrors
+                }
+            });
+
+            return;
+        } 
 
         this.props.validUsername(roomName, username)
         .then(validUsername => {
@@ -117,7 +135,7 @@ class JoinRoomDialogComponent extends React.Component<Props, State> {
                         ...this.state.errors,
                         username: ["Username taken"].concat(this.state.errors.username)
                     }
-                })
+                });
             }
         })
         .catch(err => {
@@ -128,7 +146,12 @@ class JoinRoomDialogComponent extends React.Component<Props, State> {
     handleConnectNext() {
         const { roomName, username } = this.state.joinRoomForm;
 
-        this.props.joinRoom(roomName, username);
+        this.props.joinRoom(roomName, username)
+        .then(connected => {
+            if(connected) {
+                this.setState(defaultState);
+            }
+        });
     }
 
     handleNext() {
@@ -167,7 +190,7 @@ class JoinRoomDialogComponent extends React.Component<Props, State> {
     render() {
 
         const { open, rooms, classes } = this.props; 
-        const { step } = this.state;
+        const { step, errors } = this.state;
         const { roomName, username } = this.state.joinRoomForm;
 
         return (
@@ -183,16 +206,6 @@ class JoinRoomDialogComponent extends React.Component<Props, State> {
                         <StepLabel>Connect</StepLabel>
                     </Step>
                 </Stepper>
-
-                {/* <Grid className={classes.stepperActions} container xs={12}>
-                    <Grid item xs={2}>
-                        
-                    </Grid>
-                    <Grid item xs={2}>
-                        
-                    </Grid>
-                </Grid> */}
-                {/* <DialogTitle>Rooms</DialogTitle> */}
                 {step == 0 &&
                     <List>
                         {rooms.map(room => {
@@ -221,9 +234,8 @@ class JoinRoomDialogComponent extends React.Component<Props, State> {
                             onChange={this.handleUsernameChange.bind(this)}
                             type="text"
                             fullWidth
-                            // error={errors.username.length != 0}
-                            // helperText={errors.name.length != 0 && errors.name[0]}
-                            // disabled
+                            error={errors.username.length != 0}
+                            helperText={errors.username.length != 0 && errors.username[0]}
                         />
                     </div>
                 }
@@ -255,7 +267,7 @@ class JoinRoomDialogComponent extends React.Component<Props, State> {
 
                 <div className={classes.stepperActions}>
                     <Button onClick={this.handleBack.bind(this)} disabled={step == 0}>Prev</Button>
-                    <Button onClick={this.handleNext.bind(this)} disabled={step == 0 && roomName == "" || step == 1 && username == ""}color="primary">{step != 2 ? "Next" : "Connect"}</Button>
+                    <Button onClick={this.handleNext.bind(this)} disabled={step == 0 && roomName == "" || step == 1 && username == ""} color="primary">{step != 2 ? "Next" : "Connect"}</Button>
                 </div>
             </Dialog>
         );

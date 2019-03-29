@@ -59,6 +59,22 @@ class ChatCache {
             delete this.roomCache[roomName];
         }
     }
+
+    getConnectedUsers(roomName) {
+        if(this.roomInCache(roomName)) {
+            return Object.keys(this.roomCache[roomName]);
+        } else {
+            return [];
+        }
+    }
+}
+
+const getJoinMessage = (username) => {
+    return `${username} has joined the room`;
+}
+
+const getDisconnectMessage = (username) => {
+    return `${username} has left the room`;
 }
 
 // stores current connections on memory, can be done through database if memory is a problem.
@@ -72,17 +88,25 @@ io.on('connection', (socket) => {
         roomName = roomName1;
     }
 
-    const joinRoom = (roomName, username) => {
-        if(roomName !== undefined) {
-            socket.leave(roomName);
-            roomName = undefined;
-        }
+    const removeSocketMetaData = () => {
+        socket.username = undefined;
+        roomName = undefined;
+    }
 
+    const validChatUsername = (username) => {
+        return typeof(username === "string") && username.length >= 1 && username.length <= 15;;
+    }
+
+    const joinRoom = (roomName, username) => {
         socket.join(roomName);
         chatCache.saveUserInRoomCache(roomName, username);
         setSocketMetaData(roomName, username);
+
+        Log.create({ username, event: 'join', message: getJoinMessage(username), roomName })
+            .catch(err => console.trace(err));
         
         socket.emit("joinedRoom");
+        io.in(roomName).emit("newMessage", { username, type: "join", message: getJoinMessage(username) });
     }
 
     socket.on("connectToRoom", (data) => {
@@ -101,7 +125,7 @@ io.on('connection', (socket) => {
                 return;
             } 
 
-            if(chatCache.roomInCache(room.name) && chatCache.usernameExistsInRoom(room.name, username)) {
+            if(chatCache.roomInCache(room.name) && chatCache.usernameExistsInRoom(room.name, username) || !validChatUsername(username)) {
                 socket.emit("invalidUsername");
                 return;
             }
@@ -124,48 +148,45 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on("disconnect", () => {
-        chatCache.removeUserInRoomCache(roomName, socket.username);
-        roomName = undefined;
+    socket.on('message', (data) => {
+        const { message } = data;
+
+        if(roomName !== undefined && socket.username !== undefined) {
+            io.in(roomName).emit("newMessage", { username: socket.username, message, type: "message" });
+
+            Log.create({ username: socket.username, event: 'message', message, roomName })
+                .catch(err => console.trace(err));
+        } else {
+            socket.emit("error");
+        }
     });
-    // const roomName = socket.handshake.query.room;
-    // const token = socket.handshake.query.token;
 
-    // const username = getChatUsername(token);
+    socket.on("disconnect", () => {
+        if(roomName !== undefined && socket.username !== undefined) {
+            Log.create({ username: socket.username, event: 'disconnect', message: getDisconnectMessage(socket.username), roomName })
+            .catch(err => console.trace(err));
 
-    // Room.findOne({ name: roomName }).exec()
-    //     .then((room) => {
-    //         if(!room) {
-    //             socket.disconnect();
-    //             return;
-    //         }
-       
-    //         socket.join(roomName);
+            io.in(roomName).emit("newMessage", { username: socket.username, type: "disconnect", message: `${socket.username} has left the room` });
+            chatCache.removeUserInRoomCache(roomName, socket.username);
 
-    //         socket.username = username;
-        
-    //         const joinMessage = `${username} has joined the room`;
-        
-    //         Log.create({ username, event: 'join', message: joinMessage, roomName });
-        
-    //         io.in(roomName).emit('join', { username, message: joinMessage, type: 'join' });
-        
-    //         socket.on('disconnect', () => {
-    //             const message = `${username} has left the room`;
-        
-    //             Log.create({ username, event: 'disconnect', message, roomName });
-        
-    //             io.in(roomName).emit('left', { username, message, type: 'disconnect' });
-    //         });
-        
-    //         socket.on('message', (data) => {
-    //             const message = data.message;
-        
-    //             Log.create({ username, event: 'message', message, roomName });
-        
-    //             io.to(roomName).emit('message', { username, message, type: 'message' });
-    //         });
-    //     });
+            removeSocketMetaData();
+        }
+    });
+
+    socket.on("leaveRoom", (data) => {
+        if(roomName !== undefined && socket.username !== undefined) {
+            chatCache.removeUserInRoomCache(roomName, socket.username);
+            socket.leave(roomName);
+            socket.emit("leftRoom");
+
+            Log.create({ username: socket.username, event: 'disconnect', message: getDisconnectMessage(socket.username), roomName })
+                .catch(err => console.trace(err));
+
+            io.in(roomName).emit("newMessage", { username: socket.username, type: "disconnect", message: getDisconnectMessage(socket.username)});
+
+            removeSocketMetaData();
+        }
+    });
 });
 
 const port = process.env.PORT || 8000;
@@ -179,17 +200,15 @@ app.use('/room', require('./app/rooms/routes'));
 app.get('/chat/users/:roomName', (req, res) => {
     const roomName = req.params.roomName;
 
-    const room = io.sockets.adapter.rooms[roomName];
+    // const room = io.sockets.adapter.rooms[roomName];
+    // console.log("called")
+    // console.log(roomName)
+    // console.log(chatCache.getConnectedUsers(roomName))
+    // console.log(chatCache);
 
-    if(room) {
-        const clients = room.sockets;
+    if(chatCache.roomInCache(roomName)) {
+        const usernames = chatCache.getConnectedUsers(roomName);
 
-        const usernames = Object.keys(clients).map(clientId => {
-            const clientSocket = io.sockets.connected[clientId];
-    
-            return clientSocket.username;
-        });
-    
         res.status(200).json({ usernames }).end();
     } else {
         res.sendStatus(404).end();

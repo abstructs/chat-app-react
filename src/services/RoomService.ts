@@ -59,4 +59,10 @@ export class RoomService extends Service {
         .then(onSuccess)
         .catch(onReject);
     }
+
+    public static viewConnected(roomName: string): Promise<String[]> {
+        console.log(roomName)
+        return axios.get(`${super.getApiUrl()}/chat/users/${roomName}`)
+            .then((res) => res.data["usernames"]);
+    }
 }
