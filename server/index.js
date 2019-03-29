@@ -102,7 +102,7 @@ io.on('connection', (socket) => {
         chatCache.saveUserInRoomCache(roomName, username);
         setSocketMetaData(roomName, username);
 
-        Log.create({ username, event: 'join', message: getJoinMessage(username), roomName })
+        Log.create({ username, type: 'join', message: getJoinMessage(username), roomName })
             .catch(err => console.trace(err));
         
         socket.emit("joinedRoom");
@@ -154,7 +154,7 @@ io.on('connection', (socket) => {
         if(roomName !== undefined && socket.username !== undefined) {
             io.in(roomName).emit("newMessage", { username: socket.username, message, type: "message" });
 
-            Log.create({ username: socket.username, event: 'message', message, roomName })
+            Log.create({ username: socket.username, type: 'message', message, roomName })
                 .catch(err => console.trace(err));
         } else {
             socket.emit("error");
@@ -163,7 +163,7 @@ io.on('connection', (socket) => {
 
     socket.on("disconnect", () => {
         if(roomName !== undefined && socket.username !== undefined) {
-            Log.create({ username: socket.username, event: 'disconnect', message: getDisconnectMessage(socket.username), roomName })
+            Log.create({ username: socket.username, type: 'disconnect', message: getDisconnectMessage(socket.username), roomName })
             .catch(err => console.trace(err));
 
             io.in(roomName).emit("newMessage", { username: socket.username, type: "disconnect", message: `${socket.username} has left the room` });
@@ -179,7 +179,7 @@ io.on('connection', (socket) => {
             socket.leave(roomName);
             socket.emit("leftRoom");
 
-            Log.create({ username: socket.username, event: 'disconnect', message: getDisconnectMessage(socket.username), roomName })
+            Log.create({ username: socket.username, type: 'disconnect', message: getDisconnectMessage(socket.username), roomName })
                 .catch(err => console.trace(err));
 
             io.in(roomName).emit("newMessage", { username: socket.username, type: "disconnect", message: getDisconnectMessage(socket.username)});
@@ -252,7 +252,7 @@ app.get('/api/eventlog', (req, res) => {
         } else {
             res.status(200).json(logs);
         }
-    }).select('-_id event roomName username createdAt');
+    }).select('-_id type roomName username createdAt');
 });
 
 // Write a mongoose query to retrieve all user history
@@ -266,7 +266,7 @@ app.get('/api/history/user/:username', (req, res) => {
         } else {
             res.status(200).json(logs);
         }
-    }).select("-_id username event message roomName createdAt");
+    }).select("-_id username type message roomName createdAt");
 });
 
 // Write a mongoose query to retrieve all user history by room name
@@ -281,7 +281,7 @@ app.get('/api/history/:roomName/:username', (req, res) => {
         } else {
             res.status(200).json(logs);
         }
-    }).select("-_id username event message createdAt");
+    }).select("-_id username type message createdAt");
 });
 
 app.use("/", express.static(__dirname + "/../dist/chat-app"));

@@ -1,5 +1,6 @@
 import { Service } from './Service';
 import axios, { AxiosResponse } from 'axios';
+import { ChatMessage } from './ChatService';
 // import * as Cookies from 'js-cookie';
 
 export enum RoomStatus {
@@ -70,8 +71,18 @@ export class RoomService extends Service {
     }
 
     public static viewConnected(roomName: string): Promise<String[]> {
-        console.log(roomName)
         return axios.get(`${super.getApiUrl()}/chat/users/${roomName}`)
             .then((res) => res.data["usernames"]);
+    }
+
+    public static getMessages(roomName: string, pageNumber: number, beforeTime: Date): Promise<ChatMessage[]> {
+        const payload = {
+            roomName,
+            pageNumber,
+            beforeTime
+        }
+        
+        return axios.post(`${super.getApiUrl()}/room/messages`, payload)
+            .then((res) => res.data["messages"]);
     }
 }

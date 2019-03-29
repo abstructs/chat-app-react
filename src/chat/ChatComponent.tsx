@@ -64,7 +64,9 @@ interface State {
     messages: ChatMessage[],
     chatUsername: string,
     message: string,
-    connectedDialogOpen: boolean
+    connectedDialogOpen: boolean,
+    page: number,
+    lastPage: boolean
 }
 
 interface Props {
@@ -84,11 +86,13 @@ interface Props {
 class ChatComponent extends React.Component<Props, State> {
 
     private chatService: ChatService;
+    private connectionTime: Date;
 
     constructor(props: Props) {
         super(props);
         
         this.chatService = new ChatService(this.onNewMessage.bind(this), this.onClientDisconnect.bind(this));
+        this.connectionTime = new Date();
 
         this.state = {
             roomDialogOpen: false,
@@ -99,7 +103,9 @@ class ChatComponent extends React.Component<Props, State> {
             messages: [],
             connected: false,
             message: "",
-            connectedDialogOpen: false
+            connectedDialogOpen: false,
+            page: 0,
+            lastPage: false
         }
         
         this.getRooms();
@@ -131,7 +137,9 @@ class ChatComponent extends React.Component<Props, State> {
             roomName: "",
             messages: [],
             connected: false,
-            messageExpansionOpen: false
+            messageExpansionOpen: false,
+            page: 0,
+            lastPage: false
         });
     }
 
@@ -174,9 +182,12 @@ class ChatComponent extends React.Component<Props, State> {
 
     joinRoom(roomName: string, username: string): Promise<Boolean> {
         return new Promise((resolve, reject) => {
+            this.connectionTime = new Date();
+            
             this.chatService.connectToRoom(roomName, username)
             .then(connected => {
                 if(connected) {
+
                     this.setState({
                         connected: true,
                         roomName,
@@ -224,9 +235,21 @@ class ChatComponent extends React.Component<Props, State> {
         });
     }
 
+    getPreviousMessages() {
+        RoomService.getMessages(this.state.roomName, this.state.page, this.connectionTime)
+        .then(messages => {
+            this.setState({
+                messages: messages.concat(this.state.messages),
+                page: this.state.page + 1,
+                lastPage: messages.length == 0
+            });
+            console.log(messages);
+        });
+    }
+
     render() {
         const { classes } = this.props;
-        const { connectedDialogOpen, message, messages, roomDialogOpen, rooms, messageExpansionOpen, connected, roomName, chatUsername } = this.state;
+        const { lastPage, connectedDialogOpen, message, messages, roomDialogOpen, rooms, messageExpansionOpen, connected, roomName, chatUsername } = this.state;
 
         return ( 
             <div className={classes.root}>
@@ -261,6 +284,7 @@ class ChatComponent extends React.Component<Props, State> {
                     <ExpansionPanelDetails className={classes.block}>
                         <div style={{width: "100%"}}>
                             <List>
+                                {!lastPage && <Button onClick={this.getPreviousMessages.bind(this)}color="primary">Load Previous Messages</Button> }
                                 {messages.map((message, index) => {
                                     return (
                                         <ListItem key={index}>

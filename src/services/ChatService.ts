@@ -15,6 +15,12 @@ export interface ChatMessage {
     type: MessageType;
 }
 
+export interface ChatLog {
+    username: String;
+    message: String;
+    event: MessageType;
+}
+
 export class ChatService extends Service {
 
     private socket: SocketIOClient.Socket;

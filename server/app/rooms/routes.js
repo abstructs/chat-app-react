@@ -7,6 +7,8 @@ const path = require('path');
 
 const router = express.Router();
 
+const Log = require('../logs/schema');
+
 const authorizeUser = (req, res, next) => {
     const auth = req.get('Authorization');
 
@@ -97,7 +99,7 @@ router.put('/', authorizeUser, (req, res) => {
 
         room.save();
 
-        if(room.status == "inactive") {
+        if(room.status === "inactive") {
             const io = req.app.get("socketio");
 
             io.in(room.name).emit("roomInactive");
@@ -152,6 +154,26 @@ router.get('/exists/:name', (req, res) => {
                 res.status(200).end();
             }
         });
+});
+
+const pageSize = 5;
+
+router.post('/messages', (req, res) => {
+    const { roomName, pageNumber, beforeTime } = req.body;
+
+    const before = new Date(beforeTime);
+
+    Log.find({ roomName, createdAt: { $lte: before } }, {}, { skip: pageNumber * pageSize, limit: pageSize}, (err, messages) => {
+        if(err) {
+            console.trace(err);
+            res.status(500).send();
+            return;
+        }
+
+        res.send({ messages: messages.reverse() });
+    })
+    .select("-_id username message type")
+    .sort('-createdAt');
 });
 
 router.post('/valid-name', validRoomName, (req, res) => {
