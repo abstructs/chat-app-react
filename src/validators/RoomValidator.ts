@@ -21,16 +21,14 @@ export class RoomValidator extends Validator {
         statusErrors.concat(this.validateStatus(status));
 
         return new Promise((resolve, reject) => {
-            RoomService.validRoomName(name, () => {
-                nameErrors.push("Username is already taken");
+            RoomService.roomExists(name, () => {
+                nameErrors.push("Name already taken");
 
                 resolve({ name: nameErrors, status: statusErrors });
             }, () => {
                 resolve({ name: nameErrors, status: statusErrors });
-            })
-            
+            }) 
         });
-    
     }
 
 

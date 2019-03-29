@@ -3,16 +3,7 @@ const Room = require('./schema');
 const jwt = require('jsonwebtoken');
 const fs = require('fs');
 
-// const io = require('../../index.js');
-
 const path = require('path');
-
-// socket.io.on('connection', (socket) => {
-//     console.log(socket);
-//     console.log('room connected');
-// });
-
-// const saltRounds = 10;
 
 const router = express.Router();
 
@@ -108,28 +99,6 @@ router.put('/', authorizeUser, (req, res) => {
 
         res.status(200).send({ success: "Room updated" });
     });
-    
-    // if(req.body.room) {
-        
-
-    //     const user_id = res.locals.user_id;
-
-    //     room.user = user_id;
-
-    //     // consume user id
-    //     res.locals.user_id = undefined;
-
-    //     room.save(err => {
-    //         if(err) {
-    //             console.trace(err);
-    //             throw err;
-    //         }
-    
-    //         res.status(200).send({ success: "Successfully added room.", room });
-    //     });
-    // } else {
-    //     res.status(400).send({ errors: { room: "Expected a room." }});
-    // }
 });
  
 router.get('/', (req, res) => {

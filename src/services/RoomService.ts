@@ -32,7 +32,7 @@ export class RoomService extends Service {
         .catch(onReject);
     }
 
-    public static validRoomName(name: string, onSuccess: () => void, onReject: (reason: any) => void) {
+    public static roomExists(name: string, onSuccess: () => void, onReject: (reason: any) => void) {
         axios.get(`${super.getApiUrl()}/room/exists/${name}`)
         .then(onSuccess)
         .catch(onReject);

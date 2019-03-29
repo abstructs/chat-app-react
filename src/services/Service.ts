@@ -5,6 +5,10 @@ export abstract class Service {
         return "http://localhost:8000";
     }
 
+    protected getApiUrl(): string {
+        return "http://localhost:8000";
+    }
+
     protected static getToken(): string | undefined {
         return Cookies.get("token");
     }

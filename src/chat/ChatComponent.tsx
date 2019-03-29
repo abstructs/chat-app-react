@@ -1,21 +1,30 @@
 import * as React from 'react';
-import { Avatar, Card, Paper, TextField, Typography, withStyles, Grid, CardContent, List, ListItem, CardActions, Theme, Button, Fab, Dialog, DialogTitle, ListItemAvatar, ListItemText } from '@material-ui/core';
+import { Avatar, Card, Paper, TextField, Typography, withStyles, Grid, CardContent, List, ListItem, CardActions, Theme, Button, Fab, Dialog, DialogTitle, ListItemAvatar, ListItemText, ExpansionPanel, ExpansionPanelSummary, ExpansionPanelDetails, ListItemIcon } from '@material-ui/core';
 import { MuiTheme } from 'material-ui/styles';
 
 import SpeakerNotesIcon from '@material-ui/icons/SpeakerNotes';
 
 import RoomIcon from '@material-ui/icons/Chat';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+
 import { Room, RoomService } from '../services/RoomService';
+
+import io from 'socket.io-client';
+import { ChatService } from '../services/ChatService';
+import JoinRoomDialogComponent from './JoinRoomDialogComponent';
 
 const styles = ({ spacing, palette }: Theme) => ({
     root: {
         flexGrow: 1,
         margin: spacing.unit * 3
     },
+    block: {
+        display: "block"
+    },
     card: {
         minWidth: 500,
         maxWidth: 600,
-        minHeight: 300,
+        // minHeight: 300,
         padding: spacing.unit * 3
     },
     textField: {
@@ -32,14 +41,30 @@ const styles = ({ spacing, palette }: Theme) => ({
     title: {
         margin: spacing.unit * 3
     },
+    sendBtn: {
+        margin: "auto",
+        display: "block",
+        marginTop: spacing.unit * 3,
+        marginBottom: spacing.unit
+    },
     avatar: {
 
     }
-})
+});
+
+interface Message {
+    user: string,
+    message: string
+}
 
 interface State {
     roomDialogOpen: boolean,
-    rooms: Room[]
+    rooms: Room[],
+    messageExpansionOpen: boolean,
+    connected: boolean,
+    roomName: string,
+    messages: Message[],
+    chatUsername: string
 }
 
 interface Props {
@@ -50,20 +75,38 @@ interface Props {
         formContainer: string,
         fab: string,
         title: string,
-        avatar: string
+        avatar: string,
+        block: string,
+        sendBtn: string
     }
 }
 
 class ChatComponent extends React.Component<Props, State> {
+
+    private chatService: ChatService;
+
     constructor(props: Props) {
         super(props);
+        
+        this.chatService = new ChatService();
 
         this.state = {
             roomDialogOpen: false,
-            rooms: []
+            rooms: [],
+            messageExpansionOpen: false,
+            chatUsername: "",
+            roomName: "",
+            messages: [],
+            connected: false
         }
-
+        
         this.getRooms();
+    }
+
+    toggleMessageExpansion() {
+        this.setState({
+            messageExpansionOpen: !this.state.messageExpansionOpen
+        });
     }
 
     openRoomDialog() {
@@ -80,6 +123,32 @@ class ChatComponent extends React.Component<Props, State> {
         });
     }
 
+    joinRoom(roomName: string, username: string) {
+        this.chatService.connectToRoom(roomName, username)
+        .then(connected => {
+            if(connected) {
+                this.setState({
+                    connected: true,
+                    roomName,
+                    chatUsername: username,
+                    roomDialogOpen: false,
+                    messageExpansionOpen: true
+                });
+            } else {
+                this.setState({
+                    connected: false,
+                    roomName: "",
+                    roomDialogOpen: false,
+                    messageExpansionOpen: false
+                });
+            }
+        });
+    }
+
+    validChatUsername(roomName: string, username: string): Promise<Boolean> {
+        return this.chatService.validChatUsername(roomName, username);
+    }
+
     getRooms() {
         RoomService.findAll((rooms) => {
             this.setState({
@@ -92,44 +161,27 @@ class ChatComponent extends React.Component<Props, State> {
 
     render() {
         const { classes } = this.props;
-        const { roomDialogOpen, rooms } = this.state;
+        const { roomDialogOpen, rooms, messageExpansionOpen, connected, roomName, chatUsername } = this.state;
 
         return ( 
             <div className={classes.root}>
-                <Dialog fullWidth maxWidth="xs" open={roomDialogOpen} onClose={this.handleRoomDialogClose.bind(this)}>
-                    <DialogTitle>Rooms</DialogTitle>
-                    <div>
-                        <List>
-                            {rooms.map(room => {
-                                return (
-                                    <ListItem>
-                                        <ListItemAvatar>
-                                            <Avatar className={classes.avatar}>
-                                                <RoomIcon />
-                                            </Avatar>
-                                        </ListItemAvatar>
-                                        <ListItemText primary={room.name}></ListItemText>
-                                        
-                                    </ListItem>
-                                );
-                            })}
-                        </List>
-                    </div>
-                </Dialog>
+                <JoinRoomDialogComponent validUsername={this.validChatUsername.bind(this)} rooms={rooms} joinRoom={this.joinRoom.bind(this)} onClose={this.handleRoomDialogClose.bind(this)} open={roomDialogOpen} />
 
-                <Grid container justify="center" xs={12}>
-                    <Card color="inherit" className={classes.card}>
+                <ExpansionPanel expanded={messageExpansionOpen}>
+                    <ExpansionPanelSummary expandIcon={connected && <ExpandMoreIcon onClick={this.toggleMessageExpansion.bind(this)} />}>
                         <Grid container spacing={24} justify="space-between">
-                            <Grid item>
-                                <Typography className={classes.title} align="center" variant="h6" gutterBottom>Messages</Typography>
+                            <Grid item direction="column">
+                                <Typography className={classes.title} align="center" variant="h6" gutterBottom>{connected ? `${roomName} - Connected as ${chatUsername}` : "Not Connected"}</Typography>
                             </Grid>
-                            <Grid item>
-                                <Fab onClick={this.openRoomDialog.bind(this)} size="small" color="primary" aria-label="Add" className={classes.fab}>
+                            <Grid item direction="column">
+                                <Fab onClick={this.openRoomDialog.bind(this)} size="small" color="primary" className={classes.fab}>
                                     <SpeakerNotesIcon />
                                 </Fab>
                             </Grid>
                         </Grid>
-                        <CardContent>
+                    </ExpansionPanelSummary>
+                    <ExpansionPanelDetails className={classes.block}>
+                        <div style={{width: "100%"}}>
                             <List>
                                 <ListItem>
                                     Andrew: Hi
@@ -141,21 +193,17 @@ class ChatComponent extends React.Component<Props, State> {
                                     Andrew: Hi
                                 </ListItem>
                             </List>
-                        </CardContent>
-                        <CardActions>
-                            {/* <form className={classes.formContainer}> */}
-                                <TextField 
-                                    label="Message"
-                                    value=""
-                                    className={classes.textField}
-                                    fullWidth
-                                    multiline
-                                />
-                                <Button>Send</Button>
-                            {/* </form> */}
-                        </CardActions>
-                    </Card>
-                </Grid>
+                        </div>
+                        <TextField 
+                            label="Message"
+                            value=""
+                            className={classes.textField}
+                            fullWidth
+                            multiline
+                        />
+                        <Button className={classes.sendBtn}>Send</Button>
+                    </ExpansionPanelDetails>
+                </ExpansionPanel>
             </div>
         );
     }

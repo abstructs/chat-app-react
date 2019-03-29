@@ -17,57 +17,155 @@ const Room = require('./app/rooms/schema');
 
 // server.listen(3100);
 
-const getChatUsername = (token) => {
-    const cert = fs.readFileSync(path.resolve(__dirname) + '/private.key');
+// const getChatUsername = (token) => {
+//     const cert = fs.readFileSync(path.resolve(__dirname) + '/private.key');
 
-    try {
-        const decoded = jwt.verify(token, cert);
+//     try {
+//         const decoded = jwt.verify(token, cert);
 
-        return decoded.username;        
-    } catch(err) {
-        return "Anonymous";
+//         return decoded.username;        
+//     } catch(err) {
+//         return "Anonymous";
+//     }
+// }
+
+class ChatCache {
+    constructor() {
+        this.roomCache = {};
+    }
+
+    roomInCache(roomName) {
+        return this.roomCache[roomName] !== undefined;
+    }
+
+    usernameExistsInRoom(roomName, username) {
+        return this.roomInCache(roomName) && this.roomCache[roomName][username] !== undefined;
+    }
+
+    saveUserInRoomCache(roomName, username) {
+        if(!this.roomInCache(roomName)) {
+            this.roomCache[roomName] = {};
+        }
+
+        this.roomCache[roomName][username] = "connected";
+    }
+
+    removeUserInRoomCache(roomName, username) {
+        if(this.roomInCache(roomName) && this.usernameExistsInRoom(roomName, username)) {
+            delete this.roomCache[roomName][username];
+        }
+
+        if(this.roomInCache(roomName) && Object.keys(this.roomCache[roomName]).length === 0) {
+            delete this.roomCache[roomName];
+        }
     }
 }
 
+// stores current connections on memory, can be done through database if memory is a problem.
+const chatCache = new ChatCache();
+
 io.on('connection', (socket) => {
-    const roomName = socket.handshake.query.room;
-    const token = socket.handshake.query.token;
+    let roomName = undefined;
 
-    const username = getChatUsername(token);
+    const setSocketMetaData = (roomName1, username) => {
+        socket.username = username;
+        roomName = roomName1;
+    }
 
-    Room.findOne({ name: roomName }).exec()
-        .then((room) => {
-            if(!room) {
-                socket.disconnect();
+    const joinRoom = (roomName, username) => {
+        if(roomName !== undefined) {
+            socket.leave(roomName);
+            roomName = undefined;
+        }
+
+        socket.join(roomName);
+        chatCache.saveUserInRoomCache(roomName, username);
+        setSocketMetaData(roomName, username);
+        
+        socket.emit("joinedRoom");
+    }
+
+    socket.on("connectToRoom", (data) => {
+        const { username, roomName } = data;
+
+        Room.findOne({ name: roomName }, (err, room) => {
+            if(err) {
+                console.trace(err);
+
+                socket.emit("error");
                 return;
             }
-       
-            socket.join(roomName);
 
-            socket.username = username;
-        
-            const joinMessage = `${username} has joined the room`;
-        
-            Log.create({ username, event: 'join', message: joinMessage, roomName });
-        
-            io.in(roomName).emit('join', { username, message: joinMessage, type: 'join' });
-        
-            socket.on('disconnect', () => {
-                const message = `${username} has left the room`;
-        
-                Log.create({ username, event: 'disconnect', message, roomName });
-        
-                io.in(roomName).emit('left', { username, message, type: 'disconnect' });
-            });
-        
-            socket.on('message', (data) => {
-                const message = data.message;
-        
-                Log.create({ username, event: 'message', message, roomName });
-        
-                io.to(roomName).emit('message', { username, message, type: 'message' });
-            });
+            if(room == null) {
+                socket.emit("invalidRoom");
+                return;
+            } 
+
+            if(chatCache.roomInCache(room.name) && chatCache.usernameExistsInRoom(room.name, username)) {
+                socket.emit("invalidUsername");
+                return;
+            }
+
+            if(!chatCache.roomInCache(room.name)) {
+                chatCache.roomCache[room.name] = {};
+            }
+
+            joinRoom(room.name, username);
         });
+    });
+
+    socket.on("validChatUsername", (data) => {
+        const { username, roomName } = data;
+
+        if(!chatCache.usernameExistsInRoom(roomName, username)) {
+            socket.emit("validUsername");
+        } else {
+            socket.emit("invalidUsername");
+        }
+    });
+
+    socket.on("disconnect", () => {
+        chatCache.removeUserInRoomCache(roomName, socket.username);
+        roomName = undefined;
+    });
+    // const roomName = socket.handshake.query.room;
+    // const token = socket.handshake.query.token;
+
+    // const username = getChatUsername(token);
+
+    // Room.findOne({ name: roomName }).exec()
+    //     .then((room) => {
+    //         if(!room) {
+    //             socket.disconnect();
+    //             return;
+    //         }
+       
+    //         socket.join(roomName);
+
+    //         socket.username = username;
+        
+    //         const joinMessage = `${username} has joined the room`;
+        
+    //         Log.create({ username, event: 'join', message: joinMessage, roomName });
+        
+    //         io.in(roomName).emit('join', { username, message: joinMessage, type: 'join' });
+        
+    //         socket.on('disconnect', () => {
+    //             const message = `${username} has left the room`;
+        
+    //             Log.create({ username, event: 'disconnect', message, roomName });
+        
+    //             io.in(roomName).emit('left', { username, message, type: 'disconnect' });
+    //         });
+        
+    //         socket.on('message', (data) => {
+    //             const message = data.message;
+        
+    //             Log.create({ username, event: 'message', message, roomName });
+        
+    //             io.to(roomName).emit('message', { username, message, type: 'message' });
+    //         });
+    //     });
 });
 
 const port = process.env.PORT || 8000;
