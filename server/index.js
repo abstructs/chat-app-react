@@ -4,30 +4,12 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 
-const fs = require('fs');
-const path = require('path');   
-const jwt = require('jsonwebtoken');
-
 const app = express();
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
 
 const Log = require('./app/logs/schema');
 const Room = require('./app/rooms/schema');
-
-// server.listen(3100);
-
-// const getChatUsername = (token) => {
-//     const cert = fs.readFileSync(path.resolve(__dirname) + '/private.key');
-
-//     try {
-//         const decoded = jwt.verify(token, cert);
-
-//         return decoded.username;        
-//     } catch(err) {
-//         return "Anonymous";
-//     }
-// }
 
 class ChatCache {
     constructor() {
@@ -212,15 +194,32 @@ app.get('/chat/users/:roomName', (req, res) => {
 });
 
 // Get a list of all Chat History
-app.get('/api/history', (req, res) => {
-    Log.find({}, (err, logs) => {
+app.get('/api/history/:page/:rowsPerPage', (req, res) => {
+    const { page, rowsPerPage } = req.params;
+
+    const rowsPerPageInt = parseInt(rowsPerPage);
+
+    if(isNaN(rowsPerPageInt) || rowsPerPageInt > 20 || rowsPerPageInt <= 0) {
+        res.status(400).end();
+        return;
+    }
+
+    Log.estimatedDocumentCount((err, count) => {
         if(err) {
             console.error(err);
-            res.sendStatus(400);
-        } else {
-            res.status(200).json(logs);
+            res.status(500).end();
+            return;
         }
-    }).select('-_id username message roomName createdAt');
+
+        Log.find({}, {}, { skip: page * rowsPerPageInt, limit: rowsPerPageInt }, (err, logs) => {
+            if(err) {
+                console.error(err);
+                res.sendStatus(400);
+            } else {
+                res.status(200).json({ logs, eventsCount: count });
+            }
+        }).select('-_id username message roomName createdAt');
+    });
 });
 
 // Get a list Chat or Game History by Room Name
@@ -244,15 +243,35 @@ app.post('/api/roomhistory', (req, res) => {
 
 // Write a mongoose query to retrieve all event logs
 // Get a list of all Events
-app.get('/api/eventlog', (req, res) => {
-    Log.find({}, (err, logs) => {
+
+
+// could be a bottle-neck with count, could cache 
+app.get('/api/eventlog/:page/:rowsPerPage', (req, res) => {
+    const { page, rowsPerPage } = req.params;
+
+    const rowsPerPageInt = parseInt(rowsPerPage);
+
+    if(isNaN(rowsPerPageInt) || rowsPerPageInt > 20 || rowsPerPageInt <= 0) {
+        res.status(400).end();
+        return;
+    }
+
+    Log.estimatedDocumentCount((err, count) => {
         if(err) {
             console.error(err);
             res.status(500).end();
-        } else {
-            res.status(200).json(logs);
+            return;
         }
-    }).select('-_id type roomName username createdAt');
+
+        Log.find({}, {}, { skip: page * rowsPerPageInt, limit: rowsPerPageInt }, (err, logs) => {
+            if(err) {
+                console.error(err);
+                res.status(500).end();
+            } else {
+                res.status(200).json({ logs, eventsCount: count });
+            }
+        }).select('-_id type roomName username createdAt');
+    })
 });
 
 // Write a mongoose query to retrieve all user history

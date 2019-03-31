@@ -41,7 +41,8 @@ const validRoomName = (req, res, next) => {
     }, (err, room) => {
         if(err) {
             console.trace(err);
-            throw err;
+            res.status(500).send();
+            return;
         }
         
         if(room) {
@@ -67,7 +68,8 @@ router.post('/', validRoomName, authorizeUser, (req, res) => {
         room.save(err => {
             if(err) {
                 console.trace(err);
-                throw err;
+                res.status(500).send();
+                return;
             }
     
             res.status(200).send({ success: "Successfully added room.", room });
@@ -103,10 +105,6 @@ router.put('/', authorizeUser, (req, res) => {
             const io = req.app.get("socketio");
 
             io.in(room.name).emit("roomInactive");
-
-            io.on("roomInactive", () => {
-                console.log("wtf");
-            })
         }
 
         res.status(200).send({ success: "Room updated" });
@@ -120,7 +118,8 @@ router.get('/', (req, res) => {
         .exec((err, rooms) => {
             if(err) {
                 console.trace(err);
-                throw err;
+                res.status(500).send();
+                return;
             }
 
             res.status(200).send({ rooms });
@@ -128,17 +127,40 @@ router.get('/', (req, res) => {
 });
 
 router.post('/getRooms', authorizeUser, (req, res) => {
-    Room.find({})
-        .populate('user', 'username')
-        .select('-password')
-        .exec((err, rooms) => {
-            if(err) {
-                console.trace(err);
-                throw err;
-            }
+    const { page, rowsPerPage } = req.body;
 
-            res.status(200).send({ rooms });
-        });
+    if(page === undefined || rowsPerPage === undefined) {
+        res.status(400).send();
+        return;
+    }
+
+    const rowsPerPageInt = parseInt(rowsPerPage);
+
+    if(isNaN(rowsPerPageInt) || rowsPerPageInt > 20 || rowsPerPageInt <= 0) {
+        res.status(400).end();
+        return;
+    }
+
+    Room.estimatedDocumentCount((err, count) => {
+        if(err) {
+            console.error(err);
+            res.status(500).end();
+            return;
+        }
+
+        Room.find({}, {}, { skip: page * rowsPerPageInt, limit: rowsPerPageInt })
+            .populate('user', 'username')
+            .select('-password')
+            .exec((err, rooms) => {
+                if(err) {
+                    console.trace(err);
+                    res.status(500).send();
+                    return;
+                }
+
+                res.status(200).send({ rooms, roomsCount: count });
+            });
+    });
 });
 
 

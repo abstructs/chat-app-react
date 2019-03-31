@@ -22,7 +22,13 @@ const styles = ({ spacing, palette }: Theme) => ({
         margin: spacing.unit * 3
     },
     block: {
-        display: "block"
+        display: "block",
+
+    }, 
+    messageContainer: {
+        width: "100%", 
+        maxHeight: 300,
+        minHeight: 250
     },
     card: {
         minWidth: 500,
@@ -79,7 +85,8 @@ interface Props {
         title: string,
         avatar: string,
         block: string,
-        sendBtn: string
+        sendBtn: string,
+        messageContainer: string
     }
 }
 
@@ -183,7 +190,7 @@ class ChatComponent extends React.Component<Props, State> {
     joinRoom(roomName: string, username: string): Promise<Boolean> {
         return new Promise((resolve, reject) => {
             this.connectionTime = new Date();
-            
+
             this.chatService.connectToRoom(roomName, username)
             .then(connected => {
                 if(connected) {
@@ -282,7 +289,7 @@ class ChatComponent extends React.Component<Props, State> {
                         </Grid>
                     </ExpansionPanelSummary>
                     <ExpansionPanelDetails className={classes.block}>
-                        <div style={{width: "100%"}}>
+                        <div style={{overflowY: "scroll"}} className={classes.messageContainer}>
                             <List>
                                 {!lastPage && <Button onClick={this.getPreviousMessages.bind(this)}color="primary">Load Previous Messages</Button> }
                                 {messages.map((message, index) => {

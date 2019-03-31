@@ -8,7 +8,7 @@ import { createMuiTheme, MuiThemeProvider } from '@material-ui/core';
 
 import { BrowserRouter as Router, Route } from 'react-router-dom';
 
-interface Props {
+interface Props   {
 
 }
 
@@ -33,7 +33,6 @@ const blueTheme = createMuiTheme({
     },
   },
 });
-
 
 class App extends React.Component<Props, State> {
   render() {

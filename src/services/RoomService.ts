@@ -33,13 +33,20 @@ export class RoomService extends Service {
         .catch(onReject);
     }
 
-    public static findAllAuth(onSuccess: (rooms: Room[]) => void, onReject: (reason: any) => void) {
-        axios.post(`${super.getApiUrl()}/room/getRooms`, {},
+    public static getRooms(page: number, rowsPerPage: number): Promise<{ rooms: Room[], roomsCount: number }> {
+        const body = {
+            page,
+            rowsPerPage
+        }
+
+        return axios.post(`${super.getApiUrl()}/room/getRooms`, body,
             { headers: { ...super.getAuthHeader() }})
-        .then(res => {
-            onSuccess(res.data.rooms);
-        })
-        .catch(onReject);
+        .then(res => { 
+            const rooms = res.data.rooms;
+            const roomsCount = res.data.roomsCount;
+
+            return { rooms, roomsCount };
+        });
     }
 
     public static roomExists(name: string, onSuccess: () => void, onReject: (reason: any) => void) {

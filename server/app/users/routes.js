@@ -19,7 +19,7 @@ const validUsername = (req, res, next) => {
     }, (err, user) => {
         if(err) {
             console.trace(err);
-            throw err;
+            return;
         }
         
         if(user) {
