@@ -110,6 +110,25 @@ router.put('/', authorizeUser, (req, res) => {
         res.status(200).send({ success: "Room updated" });
     });
 });
+
+router.delete('/', authorizeUser, (req, res) => {
+    const _id = req.body.roomId;
+
+    if(_id === undefined) {
+        res.status(400).send();
+        return;
+    }
+
+    Room.deleteOne({ _id }, (err) => {
+        if(err) {
+            console.trace(err);
+            res.status(500).send();
+            return;
+        }
+
+        res.status(200).send({ success: "room deleted" });
+    });
+});
  
 router.get('/', (req, res) => {
     Room.find({ status: "active" })

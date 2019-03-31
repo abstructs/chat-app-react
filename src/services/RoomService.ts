@@ -33,6 +33,14 @@ export class RoomService extends Service {
         .catch(onReject);
     }
 
+    public static deleteRoom(roomId: string): Promise<Boolean> {
+        return axios.delete(`${super.getApiUrl()}/room`,
+                { headers: { ...super.getAuthHeader() }, data: { roomId } })
+                .then(res => {
+                    return res.status == 200;
+                });
+    }
+
     public static getRooms(page: number, rowsPerPage: number): Promise<{ rooms: Room[], roomsCount: number }> {
         const body = {
             page,
@@ -41,12 +49,12 @@ export class RoomService extends Service {
 
         return axios.post(`${super.getApiUrl()}/room/getRooms`, body,
             { headers: { ...super.getAuthHeader() }})
-        .then(res => { 
-            const rooms = res.data.rooms;
-            const roomsCount = res.data.roomsCount;
+                .then(res => { 
+                    const rooms = res.data.rooms;
+                    const roomsCount = res.data.roomsCount;
 
-            return { rooms, roomsCount };
-        });
+                    return { rooms, roomsCount };
+                });
     }
 
     public static roomExists(name: string, onSuccess: () => void, onReject: (reason: any) => void) {

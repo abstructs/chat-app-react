@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { MenuItem, Theme, Dialog, DialogActions, withStyles, DialogTitle, DialogContent, TextField, FormControl, InputLabel, Select, Button, Typography } from '@material-ui/core';
+import { MenuItem, Theme, Dialog, DialogActions, withStyles, DialogTitle, DialogContent, TextField, FormControl, InputLabel, Select, Button, Typography, Radio, FormControlLabel, FormHelperText, Checkbox } from '@material-ui/core';
 import EventHistoryComponent from './EventHistoryComponent';
 import ChatHistoryComponent from './ChatHistoryComponent';
 import RoomComponent from './RoomComponent';
@@ -28,7 +28,8 @@ const styles = ({ palette, spacing }: Theme) => ({
 interface State {
     selectOpen: boolean,
     roomForm: RoomForm,
-    errors: RoomFormErrors
+    errors: RoomFormErrors,
+    deleteRoom: boolean
 }
 
 interface Props {
@@ -39,7 +40,8 @@ interface Props {
     open: boolean,
     handleClose: (refresh: boolean) => void,
     dialogMode: DialogMode,
-    room: RoomForm
+    room: RoomForm,
+    deleteRoomEnabled: boolean
 }
 
 class RoomDialogComponent extends React.Component<Props, State> {
@@ -52,7 +54,8 @@ class RoomDialogComponent extends React.Component<Props, State> {
             errors: {
                 name: [],
                 status: []
-            }
+            },
+            deleteRoom: false
         }
     }
 
@@ -120,15 +123,40 @@ class RoomDialogComponent extends React.Component<Props, State> {
 
     handleEnter() {
         this.setState({
-            roomForm: this.props.room
+            roomForm: this.props.room,
+            deleteRoom: false
         });
+    }
+
+    handleDeleteRadioChange() {
+        this.setState({
+            deleteRoom: !this.state.deleteRoom
+        });
+    }
+
+    handleDelete() {
+        if(typeof this.state.roomForm._id == "string") {
+            const roomId: string = this.state.roomForm._id;
+
+            RoomService.deleteRoom(roomId)
+                .then(deleted => {
+                    if(deleted) {
+                        this.props.handleClose(true);
+                    } else {
+                        console.log("error")
+                    }
+                })
+                .catch(err => {
+                    console.log(err);
+                });
+        }
     }
 
     render() {
 
-        const { classes, dialogMode } = this.props;
+        const { classes, dialogMode, deleteRoomEnabled } = this.props;
         const { name, status } = this.state.roomForm;
-        const { errors } = this.state;
+        const { errors, deleteRoom } = this.state;
 
         return (
             <Dialog onEnter={this.handleEnter.bind(this)} fullWidth maxWidth="xs" open={this.props.open} onClose={this.handleClose.bind(this)}>
@@ -171,11 +199,27 @@ class RoomDialogComponent extends React.Component<Props, State> {
                             <MenuItem value="inactive">Inactive</MenuItem>
                         </Select>
                     </FormControl>
+                    {dialogMode == DialogMode.EDIT &&
+                        <div>
+                            <FormControlLabel 
+                                label="Delete Room" 
+                                control={
+                                    <Checkbox 
+                                        checked={deleteRoom} 
+                                        disabled={!deleteRoomEnabled}
+                                        onChange={this.handleDeleteRadioChange.bind(this)}
+                                    />
+                                }
+                            />
+                            { !deleteRoomEnabled && <FormHelperText>Must set the room to inactive first</FormHelperText> }
+                        </div>
+                    }
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={this.handleClose.bind(this)} color="primary">Cancel</Button>
                     {dialogMode == DialogMode.ADD && <Button onClick={this.handleAdd.bind(this)} color="primary">Add</Button>}
-                    {dialogMode == DialogMode.EDIT && < Button onClick={this.handleEdit.bind(this)} color="primary">Edit</Button>}
+                    {!deleteRoom && dialogMode == DialogMode.EDIT && <Button onClick={this.handleEdit.bind(this)} color="primary">Edit</Button>}
+                    {deleteRoom && dialogMode == DialogMode.EDIT && <Button onClick={this.handleDelete.bind(this)} color="primary">Delete</Button>}
                 </DialogActions>
             </Dialog>
         );

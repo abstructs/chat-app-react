@@ -95,7 +95,7 @@ class RoomComponent extends React.Component<Props, State> {
 
         return (
             <div>
-                <RoomDialogComponent room={selectedRoom} dialogMode={roomDialogMode} open={roomDialogOpen} handleClose={this.handleRoomDialogClose.bind(this)} />
+                <RoomDialogComponent deleteRoomEnabled={selectedRoom.status === "inactive"} room={selectedRoom} dialogMode={roomDialogMode} open={roomDialogOpen} handleClose={this.handleRoomDialogClose.bind(this)} />
                 <Table>
                     <TableHead>
                         <TableRow>
@@ -106,6 +106,7 @@ class RoomComponent extends React.Component<Props, State> {
                             <TableCell>
                                 <Button color="secondary" onClick={() => this.openRoomDialog(DialogMode.ADD, emptyRoom)}>Add</Button>
                             </TableCell>
+
                         </TableRow>
                     </TableHead>
                     <TableBody>
