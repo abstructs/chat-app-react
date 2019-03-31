@@ -6,7 +6,7 @@ export abstract class Service {
     }
 
     protected getApiUrl(): string {
-        return "http://172.16.42.185:8000";
+        return Service.getApiUrl();
     }
 
     protected static getToken(): string | undefined {

@@ -32,6 +32,7 @@ const styles = ({ spacing, palette }: Theme) => ({
     },
     icon: {
         fontSize: 20,
+        color: "white"
     },
     iconVariant: {
         opacity: 0.9,
@@ -40,6 +41,7 @@ const styles = ({ spacing, palette }: Theme) => ({
     message: {
         display: 'flex',
         alignItems: 'center',
+        color: "white"
     },
 });
 
@@ -143,7 +145,6 @@ class AppSnackBar extends React.Component<Props, State> {
 
     render() {
         const { message, key, variant } = this.state.messageData;
-        // const  = this.state.messageData.variant;
 
         const { classes } = this.props;
 
@@ -171,9 +172,6 @@ class AppSnackBar extends React.Component<Props, State> {
                             <CloseIcon />
                         </IconButton>
                     }
-                // <Button key="undo" color="secondary" size="small" onClick={this.handleClose.bind(this)}>
-                //   UNDO
-                // </Button>,
                 />
             </Snackbar>
         );

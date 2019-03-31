@@ -54,10 +54,10 @@ class App extends React.Component<Props, State> {
     return (
       <Router>
         <MuiThemeProvider theme={blueTheme}>
-          <NavbarComponent />
           <AppSnackBar setOpenSnackbar={this.setOpenSnackbar.bind(this)} />
-          <Route exact path="/" render={(routeProps) => (<ChatComponent {...routeProps} showSnackbar={this.openSnackbar.bind(this)} />)} />
-          <Route exact path="/admin" render={(routeProps) => (<AdminComponent {...routeProps} showSnackbar={this.openSnackbar.bind(this)} />)} />
+          <NavbarComponent showSnackbar={(m, v) => this.openSnackbar(m, v)} />
+          <Route exact path="/" render={(routeProps) => (<ChatComponent {...routeProps} showSnackbar={(m, v) => this.openSnackbar(m, v)} />)} />
+          <Route exact path="/admin" render={(routeProps) => (<AdminComponent {...routeProps} showSnackbar={(m, v) => this.openSnackbar(m, v)} />)} />
         </MuiThemeProvider>
       </Router>
     );

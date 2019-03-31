@@ -2,6 +2,7 @@ import * as React from 'react';
 import { withStyles, AppBar, Toolbar, Typography, Button } from '@material-ui/core';
 import LoginDialogComponent from './LoginDialogComponent';
 import { UserService } from '../services/UserService';
+import { Variant } from '../helpers/AppSnackBar';
 
 const styles = {
   root: {
@@ -16,7 +17,8 @@ interface Props {
   classes: {
     root: string,
     grow: string
-  }
+  },
+  showSnackbar: (message: string, variant: Variant) => void
 }
 
 interface State {
@@ -70,7 +72,7 @@ class NavbarComponent extends React.Component<Props, State> {
               { isAuthenticated && <Button onClick={this.handleLogoutClick.bind(this)} color="inherit">Logout</Button> }
             </Toolbar>
         </AppBar>
-        <LoginDialogComponent open={loginDialogOpen} handleClose={this.handleLoginDialogClose.bind(this)} />
+        <LoginDialogComponent showSnackbar={this.props.showSnackbar} open={loginDialogOpen} handleClose={this.handleLoginDialogClose.bind(this)} />
       </div>
     );
   }

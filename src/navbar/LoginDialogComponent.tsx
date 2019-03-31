@@ -4,6 +4,7 @@ import { DialogTitle, TextField, Dialog, Theme, withStyles, DialogContent, Dialo
 import { LoginForm, UserService } from '../services/UserService';
 import { UserValidator, LoginFormErrors } from '../validators/UserValidator';
 import { CommunicationEmail } from 'material-ui/svg-icons';
+import { Variant } from '../helpers/AppSnackBar';
 
 const styles = ({ spacing, palette }: Theme) => ({
     root: {
@@ -20,7 +21,8 @@ interface Props {
     classes: {
         root: string,
         textField: string
-    }
+    },
+    showSnackbar: (message: string, variant: Variant) => void
 }
 
 interface State {
@@ -77,8 +79,9 @@ class LoginDialogComponent extends React.Component<Props, State> {
             UserService.authenticate(this.state.loginForm, (res) => {
                 location.reload();
             }, (err) => {
-                console.log(err);
-                console.log("Invalid");
+                console.log("no good");
+                console.log(this.props.showSnackbar);
+                this.props.showSnackbar("Are you really an admin?", Variant.Error);
             });
         } else {
             console.log("not valid")

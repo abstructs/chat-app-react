@@ -306,10 +306,10 @@ app.get('/api/history/:roomName/:username', (req, res) => {
     }).select("-_id username type message createdAt");
 });
 
-app.use("/", express.static(__dirname + "/../dist/chat-app"));
+app.use("/", express.static(__dirname + "/../build"));
 
 app.get('*', (req, res) => {
-    res.sendFile("index.html", { root: __dirname + "/../dist/chat-app-react" });
+    res.sendFile("index.html", { root: __dirname + "/../build" });
 });
 
 server.listen(port, () => console.log(`Now listening on port ${port}\n Go to domain:${port} on your browser to view the app.`));
