@@ -7,8 +7,9 @@ import AdminComponent from './admin/AdminComponent';
 import { createMuiTheme, MuiThemeProvider } from '@material-ui/core';
 
 import { BrowserRouter as Router, Route } from 'react-router-dom';
+import AppSnackBar, { Variant } from './helpers/AppSnackBar';
 
-interface Props   {
+interface Props {
 
 }
 
@@ -35,13 +36,28 @@ const blueTheme = createMuiTheme({
 });
 
 class App extends React.Component<Props, State> {
+
+  private openSnackbar: (message: string, variant: Variant) => void;
+
+  constructor(props: Props) {
+    super(props);
+
+    this.openSnackbar = (m, v) => {};
+  }
+
+  setOpenSnackbar(openSnackbar: (message: string, variant: Variant) => void) {
+    this.openSnackbar = openSnackbar;
+  }
+
   render() {
+
     return (
       <Router>
         <MuiThemeProvider theme={blueTheme}>
-        <NavbarComponent />
-        <Route exact path="/" component={ChatComponent}/>
-        <Route exact path="/admin" component={AdminComponent}/>
+          <NavbarComponent />
+          <AppSnackBar setOpenSnackbar={this.setOpenSnackbar.bind(this)} />
+          <Route exact path="/" render={(routeProps) => (<ChatComponent {...routeProps} showSnackbar={this.openSnackbar.bind(this)} />)} />
+          <Route exact path="/admin" render={(routeProps) => (<AdminComponent {...routeProps} showSnackbar={this.openSnackbar.bind(this)} />)} />
         </MuiThemeProvider>
       </Router>
     );

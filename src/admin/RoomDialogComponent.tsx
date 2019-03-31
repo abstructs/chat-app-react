@@ -1,12 +1,9 @@
 import React from 'react';
 
 import { MenuItem, Theme, Dialog, DialogActions, withStyles, DialogTitle, DialogContent, TextField, FormControl, InputLabel, Select, Button, Typography, Radio, FormControlLabel, FormHelperText, Checkbox } from '@material-ui/core';
-import EventHistoryComponent from './EventHistoryComponent';
-import ChatHistoryComponent from './ChatHistoryComponent';
-import RoomComponent from './RoomComponent';
-import { UserService } from '../services/UserService';
 import { RoomForm, RoomStatus, RoomService } from '../services/RoomService';
 import { RoomValidator, RoomFormErrors } from '../validators/RoomValidator';
+import { Variant } from '../helpers/AppSnackBar';
 
 export enum DialogMode {
     ADD, EDIT
@@ -41,7 +38,8 @@ interface Props {
     handleClose: (refresh: boolean) => void,
     dialogMode: DialogMode,
     room: RoomForm,
-    deleteRoomEnabled: boolean
+    deleteRoomEnabled: boolean,
+    showSnackbar: (message: string, variant: Variant) => void
 }
 
 class RoomDialogComponent extends React.Component<Props, State> {
@@ -66,17 +64,19 @@ class RoomDialogComponent extends React.Component<Props, State> {
     saveRoom() {
         if(this.props.dialogMode == DialogMode.ADD) {
             RoomService.save(this.state.roomForm, () => {
+                this.props.showSnackbar("Room has been added", Variant.Success);
                 this.props.handleClose(true);
             }, () => {
-                console.log("Error");
+                this.props.showSnackbar("Something went wrong with adding that room", Variant.Error);
             });
         }
 
         if(this.props.dialogMode == DialogMode.EDIT) {
             RoomService.edit(this.state.roomForm, () => {
+                this.props.showSnackbar("Changes have been saved", Variant.Success);
                 this.props.handleClose(true);
             }, () => {
-                console.log("Error");
+                this.props.showSnackbar("Something went wrong with saving your changes", Variant.Error);
             });
         }
 
@@ -141,13 +141,14 @@ class RoomDialogComponent extends React.Component<Props, State> {
             RoomService.deleteRoom(roomId)
                 .then(deleted => {
                     if(deleted) {
+                        this.props.showSnackbar("Room has been deleted", Variant.Success);
                         this.props.handleClose(true);
                     } else {
-                        console.log("error")
+                        this.props.showSnackbar("Something went wrong in deleting the room", Variant.Error);
                     }
                 })
                 .catch(err => {
-                    console.log(err);
+                    this.props.showSnackbar("Something went wrong in deleting the room", Variant.Error);
                 });
         }
     }

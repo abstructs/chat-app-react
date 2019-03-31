@@ -10,6 +10,7 @@ const io = require('socket.io')(server);
 
 const Log = require('./app/logs/schema');
 const Room = require('./app/rooms/schema');
+const morgan = require('morgan');
 
 class ChatCache {
     constructor() {
@@ -175,6 +176,8 @@ const port = process.env.PORT || 8000;
 
 app.use(cors());
 app.use(bodyParser.json());
+
+app.use(morgan('tiny'));
 
 app.set('socketio', io);
 

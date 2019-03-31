@@ -6,6 +6,7 @@ import ChatHistoryComponent from './ChatHistoryComponent';
 import RoomComponent from './RoomComponent';
 import { UserService } from '../services/UserService';
 import { Redirect } from 'react-router';
+import { Variant } from '../helpers/AppSnackBar';
 
 const styles = ({ palette, spacing }: Theme) => ({
     root: {
@@ -24,7 +25,8 @@ interface State {
 interface Props {
     classes: {
         root: string
-    }
+    },
+    showSnackbar: (message: string, variant: Variant) => void
 }
 
 class AdminComponent extends React.Component<Props, State> {
@@ -65,7 +67,7 @@ class AdminComponent extends React.Component<Props, State> {
                 </AppBar>
                 {tab == 0 && <EventHistoryComponent />}
                 {tab == 1 && <ChatHistoryComponent />}
-                {tab == 2 && <RoomComponent />}
+                {tab == 2 && <RoomComponent showSnackbar={this.props.showSnackbar} />}
             </div>
         );
     }

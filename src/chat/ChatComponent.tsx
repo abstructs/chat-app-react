@@ -15,6 +15,7 @@ import { ChatService, ChatMessage, MessageType } from '../services/ChatService';
 import JoinRoomDialogComponent from './JoinRoomDialogComponent';
 import { CommunicationStayCurrentLandscape } from 'material-ui/svg-icons';
 import ConnectedDialogComponent from './ConnectedDialogComponent';
+import { Variant } from '../helpers/AppSnackBar';
 
 const styles = ({ spacing, palette }: Theme) => ({
     root: {
@@ -87,7 +88,8 @@ interface Props {
         block: string,
         sendBtn: string,
         messageContainer: string
-    }
+    },
+    showSnackbar: (message: string, variant: Variant) => void
 }
 
 class ChatComponent extends React.Component<Props, State> {
@@ -148,12 +150,17 @@ class ChatComponent extends React.Component<Props, State> {
             page: 0,
             lastPage: false
         });
+
+        this.props.showSnackbar("You have left the room.", Variant.Success);
     }
 
     leaveRoom() {
         if(this.state.connected) {
             this.chatService.leaveRoom(this.state.roomName, this.state.chatUsername)
-            .then(this.onLeaveRoom.bind(this));
+            .then(this.onLeaveRoom.bind(this))
+            .then(() => this.props.showSnackbar("You have left the room.", Variant.Success));
+        } else {
+            this.props.showSnackbar("You aren't connected to a room.", Variant.Error);
         }
     }
 
@@ -178,7 +185,7 @@ class ChatComponent extends React.Component<Props, State> {
             messages: [],
             connected: false,
             messageExpansionOpen: false
-        });
+        }, () => this.props.showSnackbar("You have been disconnected.", Variant.Warning));
     }
 
     handleMessageChange(event: React.ChangeEvent<HTMLSelectElement>) {
@@ -194,7 +201,6 @@ class ChatComponent extends React.Component<Props, State> {
             this.chatService.connectToRoom(roomName, username)
             .then(connected => {
                 if(connected) {
-
                     this.setState({
                         connected: true,
                         roomName,
@@ -202,11 +208,15 @@ class ChatComponent extends React.Component<Props, State> {
                         roomDialogOpen: false,
                         messageExpansionOpen: true
                     }, () => resolve(true));
+
+                    this.props.showSnackbar("You have joined the room.", Variant.Success);
                 } else {
                     this.setState({
                         connected: false,
                         roomName: ""
                     }, () => resolve(false));
+
+                    this.props.showSnackbar("Encountered a problem connecting to the room.", Variant.Error);
                 }
             });
         });

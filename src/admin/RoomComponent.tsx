@@ -4,6 +4,7 @@ import { Dialog, Theme, Table, TableHead, TableRow, TableCell, TableBody, Button
 import { Room, RoomService, RoomForm } from '../services/RoomService';
 import AddIcon from '@material-ui/icons/Add';
 import RoomDialogComponent, { DialogMode } from './RoomDialogComponent';
+import { Variant } from '../helpers/AppSnackBar';
 
 const emptyRoom: RoomForm = {_id: null, name: "", status: "active"};
 
@@ -21,6 +22,7 @@ interface State {
 }
 
 interface Props {
+    showSnackbar: (message: string, variant: Variant) => void
 }
 
 const rowsPerPageOptions = [5, 10, 15];
@@ -95,7 +97,7 @@ class RoomComponent extends React.Component<Props, State> {
 
         return (
             <div>
-                <RoomDialogComponent deleteRoomEnabled={selectedRoom.status === "inactive"} room={selectedRoom} dialogMode={roomDialogMode} open={roomDialogOpen} handleClose={this.handleRoomDialogClose.bind(this)} />
+                <RoomDialogComponent showSnackbar={this.props.showSnackbar} deleteRoomEnabled={selectedRoom.status === "inactive"} room={selectedRoom} dialogMode={roomDialogMode} open={roomDialogOpen} handleClose={this.handleRoomDialogClose.bind(this)} />
                 <Table>
                     <TableHead>
                         <TableRow>
