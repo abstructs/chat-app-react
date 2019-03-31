@@ -60,11 +60,11 @@ class NavbarComponent extends React.Component<Props, State> {
     return ( 
       <div className={classes.root}>
         <AppBar
-          color="inherit"
+          color="primary"
           position="static">
             <Toolbar>
-              <Typography className={classes.grow} variant="h6" color="default">
-                Chat App
+              <Typography className={classes.grow} variant="h6" color="inherit">
+                ChatNow
               </Typography>
               <Button href="/" color="inherit">Home</Button>
               { !isAuthenticated && <Button onClick={this.showLoginDialog.bind(this)} color="inherit">Login</Button> }

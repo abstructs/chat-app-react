@@ -89,7 +89,7 @@ class ConnectedDialogComponent extends React.Component<Props, State> {
                     </List>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={this.handleClose.bind(this)} color="primary">Close</Button>
+                    <Button onClick={this.handleClose.bind(this)} color="secondary">Close</Button>
                 </DialogActions>
             </Dialog>
         );

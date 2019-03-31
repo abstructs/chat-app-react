@@ -217,10 +217,10 @@ class RoomDialogComponent extends React.Component<Props, State> {
                     }
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={this.handleClose.bind(this)} color="primary">Cancel</Button>
-                    {dialogMode == DialogMode.ADD && <Button onClick={this.handleAdd.bind(this)} color="primary">Add</Button>}
-                    {!deleteRoom && dialogMode == DialogMode.EDIT && <Button onClick={this.handleEdit.bind(this)} color="primary">Edit</Button>}
-                    {deleteRoom && dialogMode == DialogMode.EDIT && <Button onClick={this.handleDelete.bind(this)} color="primary">Delete</Button>}
+                    <Button onClick={this.handleClose.bind(this)} color="secondary">Cancel</Button>
+                    {dialogMode == DialogMode.ADD && <Button onClick={this.handleAdd.bind(this)} color="secondary">Add</Button>}
+                    {!deleteRoom && dialogMode == DialogMode.EDIT && <Button onClick={this.handleEdit.bind(this)} color="secondary">Edit</Button>}
+                    {deleteRoom && dialogMode == DialogMode.EDIT && <Button onClick={this.handleDelete.bind(this)} color="secondary">Delete</Button>}
                 </DialogActions>
             </Dialog>
         );

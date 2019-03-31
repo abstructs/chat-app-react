@@ -301,7 +301,7 @@ class ChatComponent extends React.Component<Props, State> {
                     <ExpansionPanelDetails className={classes.block}>
                         <div style={{overflowY: "scroll"}} className={classes.messageContainer}>
                             <List>
-                                {!lastPage && <Button onClick={this.getPreviousMessages.bind(this)}color="primary">Load Previous Messages</Button> }
+                                {!lastPage && <Button onClick={this.getPreviousMessages.bind(this)} color="secondary">Load Previous Messages</Button> }
                                 {messages.map((message, index) => {
                                     return (
                                         <ListItem key={index}>

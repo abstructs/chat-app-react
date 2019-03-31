@@ -267,7 +267,7 @@ class JoinRoomDialogComponent extends React.Component<Props, State> {
 
                 <div className={classes.stepperActions}>
                     <Button onClick={this.handleBack.bind(this)} disabled={step == 0}>Prev</Button>
-                    <Button onClick={this.handleNext.bind(this)} disabled={step == 0 && roomName == "" || step == 1 && username == ""} color="primary">{step != 2 ? "Next" : "Connect"}</Button>
+                    <Button onClick={this.handleNext.bind(this)} disabled={step == 0 && roomName == "" || step == 1 && username == ""} color="secondary">{step != 2 ? "Next" : "Connect"}</Button>
                 </div>
             </Dialog>
         );

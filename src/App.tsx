@@ -19,18 +19,18 @@ interface State {
 
 const blueTheme = createMuiTheme({
   palette: {
-    type: 'dark',
+    type: 'light',
     primary: {
-      light: '#ff5131',
-      main: '#d50000',
-      dark: '#9b0000',
-      contrastText: '#ffffff',
+      light: '#bef67a',
+      main: '#8bc34a',
+      dark: '#5a9216',
+      contrastText: '#ffffff'
     },
     secondary: {
-      light: '#fd558f',
-      main: '#c51162',
-      dark: '#8e0038',
-      contrastText: '#ffffff'
+      light: '#b6ffff',
+      main: '#81d4fa',
+      dark: '#4ba3c7',
+      contrastText: '#000000',
     },
   },
 });
