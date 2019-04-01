@@ -154,7 +154,10 @@ class ChatComponent extends React.Component<Props, State> {
             connected: false,
             messageExpansionOpen: false,
             page: 0,
-            lastPage: false
+            lastPage: false,
+            errors: {
+                message: []
+            }
         });
 
         this.props.showSnackbar("You have left the room.", Variant.Success);
@@ -345,7 +348,7 @@ class ChatComponent extends React.Component<Props, State> {
                                 }
                             }}
                         />
-                        <FormHelperText error={message.length > 140 || message.length == 0} className={classes.textField}>{message.length}/140</FormHelperText>
+                        <FormHelperText error={message.length > 140 || message.length == 0 && errors.message.length != 0} className={classes.textField}>{message.length}/140</FormHelperText>
                         <Button onClick={this.sendMessage.bind(this)} className={classes.sendBtn}>Send</Button>
                     </ExpansionPanelDetails>
                 </ExpansionPanel>
