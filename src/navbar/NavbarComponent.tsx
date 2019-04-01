@@ -55,7 +55,7 @@ class NavbarComponent extends React.Component<Props, State> {
     const { classes } = this.props;
     const { loginDialogOpen } = this.state;
 
-    const isAuthenticated = UserService.isAuthenticated();
+    const isAuthenticated = UserService.hasToken();
 
     return ( 
       <div className={classes.root}>

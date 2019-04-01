@@ -160,7 +160,23 @@ class RoomDialogComponent extends React.Component<Props, State> {
         const { errors, deleteRoom } = this.state;
 
         return (
-            <Dialog onEnter={this.handleEnter.bind(this)} fullWidth maxWidth="xs" open={this.props.open} onClose={this.handleClose.bind(this)}>
+            <Dialog 
+                onEnter={this.handleEnter.bind(this)} 
+                fullWidth 
+                maxWidth="xs" 
+                open={this.props.open} 
+                onClose={this.handleClose.bind(this)}
+                onKeyPress={(ev) => {
+                    if(ev.key == "Enter") {
+                        ev.preventDefault();
+
+                        if(dialogMode == DialogMode.ADD) {
+                            this.handleAdd();
+                        } else if(!deleteRoom && dialogMode == DialogMode.EDIT) {
+                            this.handleEdit();
+                        }
+                    }
+                }}>
                 {dialogMode == DialogMode.ADD && <DialogTitle>Add Room</DialogTitle> }
                 {dialogMode == DialogMode.EDIT && <DialogTitle>Edit Room</DialogTitle> }
                 <DialogContent>

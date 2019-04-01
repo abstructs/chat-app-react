@@ -9,6 +9,28 @@ const saltRounds = 10;
 
 const router = express.Router();
 
+const authorizeUser = (req, res, next) => {
+    const auth = req.get('Authorization');
+
+    if(!auth) {
+        return res.status(401).send({ errors: { auth: "No credentials sent." }});
+    }
+
+    const token = auth.split(' ')[1];
+    
+    const cert = fs.readFileSync(path.resolve(__dirname) + '/../../private.key');
+
+    try {
+        const decoded = jwt.verify(token, cert);
+        res.locals.user_id = decoded.id;
+        
+        next();
+    } catch(err) {
+        console.trace(err);
+        return res.status(403).send({ errors: { auth: "Invalid credential." }});
+    }
+}
+
 const validUsername = (req, res, next) => {
     const { username } = req.body.user;
 
@@ -105,8 +127,8 @@ router.post('/valid-username', validUsername, (req, res) => {
     res.status(200).send({ success: "Availible username." });
 });
 
-// router.post('/logout', userAuthenticated, (req, res) => {
-    
-// });
+router.post('/auth', authorizeUser, (req, res) => {
+    res.status(200).send();
+});
 
 module.exports = router;

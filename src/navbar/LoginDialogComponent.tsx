@@ -91,7 +91,19 @@ class LoginDialogComponent extends React.Component<Props, State> {
         const errors = this.state.errors;
 
         return (
-            <Dialog className={classes.root} fullWidth maxWidth="xs" open={open} onClose={this.handleClose.bind(this)} >
+            <Dialog 
+                onKeyPress={(ev) => {
+                    if(ev.key == "Enter") {
+                        ev.preventDefault();
+                        this.handleLogin();
+                    }
+                }} 
+                className={classes.root} 
+                fullWidth 
+                maxWidth="xs" 
+                open={open} 
+                onClose={this.handleClose.bind(this)}>
+
                 <DialogTitle>Login</DialogTitle>
                 <DialogContent>
                     <TextField 
@@ -107,7 +119,6 @@ class LoginDialogComponent extends React.Component<Props, State> {
                         helperText={errors.username.length != 0 && errors.username[0]}
                     />
                     <TextField 
-                        // className={classes.textField}
                         margin="dense"
                         label="Password"
                         value={password}

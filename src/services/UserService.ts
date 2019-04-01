@@ -38,8 +38,15 @@ export class UserService extends Service {
         Cookies.remove("token");
     }
 
-    public static isAuthenticated(): boolean {
+    public static hasToken(): boolean {
         return Cookies.get("token") != null;
+    }
+
+    public static validToken(): Promise<Boolean> {
+        return axios.post(`${super.getApiUrl()}/user/auth`, {}, 
+            { headers: { ...super.getAuthHeader() }})
+        .then(_ => true)
+        .catch(_ => false);
     }
 
     public static emailTaken(email: string, callback: (emailTaken: boolean) => void) {

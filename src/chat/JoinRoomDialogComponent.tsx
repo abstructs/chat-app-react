@@ -214,7 +214,7 @@ class JoinRoomDialogComponent extends React.Component<Props, State> {
                                         </Avatar>
                                     </ListItemAvatar>
                                     <ListItemText primary={room.name}></ListItemText>
-                                    <Button onClick={() => this.setRoomName(room.name)}>Join</Button>
+                                    <Button onClick={() => this.setRoomName(room.name)}>Select</Button>
                                 </ListItem>
                             );
                         })}

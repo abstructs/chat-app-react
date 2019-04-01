@@ -19,7 +19,9 @@ const styles = ({ palette, spacing }: Theme) => ({
 });
 
 interface State {
-    tab: number
+    tab: number,
+    authorized: boolean,
+    loading: boolean
 }
 
 interface Props {
@@ -34,21 +36,42 @@ class AdminComponent extends React.Component<Props, State> {
         super(props);
 
         this.state = {
-            tab: 0
+            tab: 0,
+            authorized: false,
+            loading: true
         }
+
+        this.authorize();
     }
 
     handleChange(_: any, tab: number) {
         this.setState({ tab });
     }
+
+    authorize() {
+        UserService.validToken()
+        .then(authorized => {
+            if(authorized) {
+                this.setState({
+                    authorized: true,
+                    loading: false
+                });
+            } else {
+                UserService.revokeToken();
+            }
+        })
+        .catch(_ => {
+            UserService.revokeToken();
+        });
+    }
     
     render() {
         const { classes } = this.props;
-        const { tab } = this.state;
+        const { tab, authorized, loading } = this.state;
 
-        const isAuthenticated = UserService.isAuthenticated();
+        const hasToken = UserService.hasToken();
 
-        if(!isAuthenticated) {
+        if(!hasToken || loading == false && !authorized) {
             return <Redirect to='/' />
         }
 

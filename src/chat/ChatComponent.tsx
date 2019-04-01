@@ -177,7 +177,10 @@ class ChatComponent extends React.Component<Props, State> {
             this.chatService.sendMessage(this.state.message);
 
             this.setState({
-                message: ""
+                message: "",
+                errors: {
+                    message: []
+                }
             });
         } else {
             this.setState({
@@ -335,6 +338,12 @@ class ChatComponent extends React.Component<Props, State> {
                             fullWidth
                             error={errors.message.length != 0}
                             helperText={errors.message.length != 0 ? errors.message[0] : ""}
+                            onKeyPress={(ev) => {
+                                if(ev.key == "Enter") {
+                                    ev.preventDefault();
+                                    this.sendMessage();
+                                }
+                            }}
                         />
                         <FormHelperText error={message.length > 140 || message.length == 0} className={classes.textField}>{message.length}/140</FormHelperText>
                         <Button onClick={this.sendMessage.bind(this)} className={classes.sendBtn}>Send</Button>
