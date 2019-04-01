@@ -18,6 +18,10 @@ export class RoomValidator extends Validator {
             nameErrors.push("Name cannot be empty");
         }
 
+        if(name.length >= 20) {
+            nameErrors.push("Name should be smaller than 20 characters");
+        }
+
         statusErrors.concat(this.validateStatus(status));
 
         return new Promise((resolve, reject) => {

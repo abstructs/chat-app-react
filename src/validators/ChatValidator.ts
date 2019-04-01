@@ -2,10 +2,9 @@ import { LoginForm, UserService } from "../services/UserService";
 import { Validator } from "./Validator";
 import { RoomForm, RoomService } from "../services/RoomService";
 
-// export interface RoomFormErrors {
-//     name: string[],
-//     status: string[]
-// }
+export interface MessageErrors {
+    message: string[]
+}
 
 export class ChatValidator extends Validator {
     public static validateUsername(username: string): string[] {
@@ -16,6 +15,20 @@ export class ChatValidator extends Validator {
 
         if(username.length > 15) {
             errors.push("Username must be below 15 characters");
+        }
+
+        return errors;
+    }
+
+    public static validateMessage(message: string): string[] {
+        const errors: string[] = [];
+
+        if(message.length === 0) {
+            errors.push("Should be not be blank");
+        }
+
+        if(message.length > 140) {
+            errors.push("Should be under 140 characters");
         }
 
         return errors;

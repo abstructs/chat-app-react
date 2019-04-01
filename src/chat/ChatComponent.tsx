@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Avatar, Card, Paper, TextField, Typography, withStyles, Grid, CardContent, List, ListItem, CardActions, Theme, Button, Fab, Dialog, DialogTitle, ListItemAvatar, ListItemText, ExpansionPanel, ExpansionPanelSummary, ExpansionPanelDetails, ListItemIcon } from '@material-ui/core';
+import { Avatar, Card, Paper, TextField, Typography, withStyles, Grid, CardContent, List, ListItem, CardActions, Theme, Button, Fab, Dialog, DialogTitle, ListItemAvatar, ListItemText, ExpansionPanel, ExpansionPanelSummary, ExpansionPanelDetails, ListItemIcon, FormHelperText } from '@material-ui/core';
 import { MuiTheme } from 'material-ui/styles';
 
 import SpeakerNotesIcon from '@material-ui/icons/SpeakerNotes';
@@ -16,6 +16,7 @@ import JoinRoomDialogComponent from './JoinRoomDialogComponent';
 import { CommunicationStayCurrentLandscape } from 'material-ui/svg-icons';
 import ConnectedDialogComponent from './ConnectedDialogComponent';
 import { Variant } from '../helpers/AppSnackBar';
+import { MessageErrors, ChatValidator } from '../validators/ChatValidator';
 
 const styles = ({ spacing, palette }: Theme) => ({
     root: {
@@ -73,7 +74,8 @@ interface State {
     message: string,
     connectedDialogOpen: boolean,
     page: number,
-    lastPage: boolean
+    lastPage: boolean,
+    errors: MessageErrors
 }
 
 interface Props {
@@ -114,7 +116,10 @@ class ChatComponent extends React.Component<Props, State> {
             message: "",
             connectedDialogOpen: false,
             page: 0,
-            lastPage: false
+            lastPage: false,
+            errors: {
+                message: []
+            }
         }
         
         this.getRooms();
@@ -165,11 +170,21 @@ class ChatComponent extends React.Component<Props, State> {
     }
 
     sendMessage() {
-        this.chatService.sendMessage(this.state.message);
+        const messageErrors = ChatValidator.validateMessage(this.state.message);
 
-        this.setState({
-            message: ""
-        });
+        if(messageErrors.length == 0) {
+            this.chatService.sendMessage(this.state.message);
+
+            this.setState({
+                message: ""
+            });
+        } else {
+            this.setState({
+                errors: {
+                    message: messageErrors
+                }
+            });
+        }
     }
 
     onNewMessage(message: ChatMessage) {
@@ -266,7 +281,7 @@ class ChatComponent extends React.Component<Props, State> {
 
     render() {
         const { classes } = this.props;
-        const { lastPage, connectedDialogOpen, message, messages, roomDialogOpen, rooms, messageExpansionOpen, connected, roomName, chatUsername } = this.state;
+        const { errors, lastPage, connectedDialogOpen, message, messages, roomDialogOpen, rooms, messageExpansionOpen, connected, roomName, chatUsername } = this.state;
 
         return ( 
             <div className={classes.root}>
@@ -318,8 +333,10 @@ class ChatComponent extends React.Component<Props, State> {
                             onChange={this.handleMessageChange.bind(this)}
                             className={classes.textField}
                             fullWidth
-                            multiline
+                            error={errors.message.length != 0}
+                            helperText={errors.message.length != 0 ? errors.message[0] : ""}
                         />
+                        <FormHelperText error={message.length > 140 || message.length == 0} className={classes.textField}>{message.length}/140</FormHelperText>
                         <Button onClick={this.sendMessage.bind(this)} className={classes.sendBtn}>Send</Button>
                     </ExpansionPanelDetails>
                 </ExpansionPanel>

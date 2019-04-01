@@ -134,7 +134,7 @@ io.on('connection', (socket) => {
     socket.on('message', (data) => {
         const { message } = data;
 
-        if(roomName !== undefined && socket.username !== undefined) {
+        if(roomName !== undefined && socket.username !== undefined && message.length > 0 && message.length <= 140) {
             io.in(roomName).emit("newMessage", { username: socket.username, message, type: "message" });
 
             Log.create({ username: socket.username, type: 'message', message, roomName })

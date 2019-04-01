@@ -12,7 +12,9 @@ const roomSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
+        minlength: 1,
+        maxLength: 20
     },
     user: {
         type: Schema.Types.ObjectId,
