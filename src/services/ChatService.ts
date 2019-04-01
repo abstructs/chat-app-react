@@ -28,7 +28,7 @@ export class ChatService extends Service {
 
         this.socket.on("error", () => {
             this.socket.removeAllListeners();
-            console.log("Socket error");
+            console.error("Socket error, bad request");
         });
 
         this.socket.on("disconnect", onDisconnect);
@@ -36,7 +36,6 @@ export class ChatService extends Service {
         this.socket.on("newMessage", onMessage);
 
         this.socket.on("roomInactive", () => {
-            console.log("Room inactive");
             onDisconnect();
         })
     }

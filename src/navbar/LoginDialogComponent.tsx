@@ -79,12 +79,8 @@ class LoginDialogComponent extends React.Component<Props, State> {
             UserService.authenticate(this.state.loginForm, (res) => {
                 location.reload();
             }, (err) => {
-                console.log("no good");
-                console.log(this.props.showSnackbar);
                 this.props.showSnackbar("Are you really an admin?", Variant.Error);
             });
-        } else {
-            console.log("not valid")
         }
     }
 

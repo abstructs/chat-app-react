@@ -63,11 +63,7 @@ class ConnectedDialogComponent extends React.Component<Props, State> {
     }
 
     render() {
-
-        const { classes, open } = this.props;
         const { users } = this.state;
-
-        console.log(users);
 
         return (
             <Dialog onEnter={this.handleEnter.bind(this)} fullWidth maxWidth="xs" open={this.props.open} onClose={this.handleClose.bind(this)}>

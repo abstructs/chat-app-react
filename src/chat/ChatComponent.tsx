@@ -50,7 +50,8 @@ const styles = ({ spacing, palette }: Theme) => ({
         margin: spacing.unit * 2
     },
     title: {
-        margin: spacing.unit * 3
+        margin: spacing.unit * 3,
+        marginLeft: spacing.unit
     },
     sendBtn: {
         margin: "auto",
@@ -251,7 +252,7 @@ class ChatComponent extends React.Component<Props, State> {
                 rooms
             });
         }, () => {
-            console.log("Something went wrong");
+            this.props.showSnackbar("Problem connecting with server", Variant.Error);
         });
     }
 
@@ -275,7 +276,6 @@ class ChatComponent extends React.Component<Props, State> {
                 page: this.state.page + 1,
                 lastPage: messages.length == 0
             });
-            console.log(messages);
         });
     }
 
@@ -292,7 +292,7 @@ class ChatComponent extends React.Component<Props, State> {
                     <ExpansionPanelSummary expandIcon={connected && <ExpandMoreIcon onClick={this.toggleMessageExpansion.bind(this)} />}>
                         <Grid container spacing={24} justify="space-between">
                             <Grid item>
-                                <Typography className={classes.title} align="center" variant="h6" gutterBottom>{connected ? `${roomName} - Connected as ${chatUsername}` : "Not Connected"}</Typography>
+                                <Typography className={classes.title} align="center" variant="h6" gutterBottom>{connected ? `Room: ${roomName} - connect as: ${chatUsername}` : "Not Connected"}</Typography>
                             </Grid>
                             <Grid item>
                                 {!connected && 

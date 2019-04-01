@@ -28,7 +28,7 @@ export class ChatValidator extends Validator {
         }
 
         if(message.length > 140) {
-            errors.push("Should be under 140 characters");
+            errors.push("Should be less than or equal to 140 characters");
         }
 
         return errors;

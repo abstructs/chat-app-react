@@ -135,6 +135,13 @@ class AppSnackBar extends React.Component<Props, State> {
         this.setState({ open: false });
     };
 
+    handleClose(event: React.SyntheticEvent<any>, reason: string) {
+        if(reason == "clickaway") {
+            return
+        }
+        this.setState({ open: false });
+    };
+
     handleSnackbarExited() {
         this.processQueue();
     }
@@ -157,7 +164,8 @@ class AppSnackBar extends React.Component<Props, State> {
                     horizontal: 'left',
                 }}
                 open={this.state.open}
-                autoHideDuration={6000}
+                autoHideDuration={3500}
+                onClose={this.handleClose.bind(this)}
             >
                 <SnackbarContent
                     key={key}

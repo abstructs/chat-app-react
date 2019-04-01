@@ -53,7 +53,7 @@ class RoomComponent extends React.Component<Props, State> {
                 });
             })
             .catch(err => {
-                console.log("Error");
+                this.props.showSnackbar("Problem connecting with server", Variant.Error);
             });
     }
 

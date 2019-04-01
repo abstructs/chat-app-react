@@ -50,9 +50,6 @@ interface JoinRoomFormErrors {
 }
 
 interface State {
-    // rooms: Room[],
-    // open: boolean,
-    // roomDialogMode: DialogMode,
     step: number,
     joinRoomForm: JoinRoomForm
     errors: JoinRoomFormErrors
@@ -124,23 +121,23 @@ class JoinRoomDialogComponent extends React.Component<Props, State> {
         } 
 
         this.props.validUsername(roomName, username)
-        .then(validUsername => {
-            if(validUsername) {
-                this.setState({
-                    step: 2
-                });
-            } else {
-                this.setState({
-                    errors: {
-                        ...this.state.errors,
-                        username: ["Username taken"].concat(this.state.errors.username)
-                    }
-                });
-            }
-        })
-        .catch(err => {
-            console.log(err);
-        });
+            .then(validUsername => {
+                if(validUsername) {
+                    this.setState({
+                        step: 2
+                    });
+                } else {
+                    this.setState({
+                        errors: {
+                            ...this.state.errors,
+                            username: ["Username taken"].concat(this.state.errors.username)
+                        }
+                    });
+                }
+            })
+            .catch(err => {
+                console.log(err);
+            });
     }
 
     handleConnectNext() {
