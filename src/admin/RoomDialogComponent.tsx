@@ -124,7 +124,11 @@ class RoomDialogComponent extends React.Component<Props, State> {
     handleEnter() {
         this.setState({
             roomForm: this.props.room,
-            deleteRoom: false
+            deleteRoom: false,
+            errors: {
+                name: [],
+                status: []
+            }
         });
     }
 

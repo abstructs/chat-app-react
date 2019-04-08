@@ -2,7 +2,7 @@ import * as Cookies from 'js-cookie';
 
 export abstract class Service {
     protected static getApiUrl(): string {
-        return "http://localhost:8000";
+        return "";
     }
 
     protected getApiUrl(): string {

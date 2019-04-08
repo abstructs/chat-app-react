@@ -119,7 +119,7 @@ io.on('connection', (socket) => {
 
             joinRoom(room.name, username);
         });
-    });
+    }); 
 
     socket.on("validChatUsername", (data) => {
         const { username, roomName } = data;
@@ -146,11 +146,12 @@ io.on('connection', (socket) => {
 
     socket.on("disconnect", () => {
         if(roomName !== undefined && socket.username !== undefined) {
+            chatCache.removeUserInRoomCache(roomName, socket.username);
+
             Log.create({ username: socket.username, type: 'disconnect', message: getDisconnectMessage(socket.username), roomName })
             .catch(err => console.trace(err));
 
             io.in(roomName).emit("newMessage", { username: socket.username, type: "disconnect", message: `${socket.username} has left the room` });
-            chatCache.removeUserInRoomCache(roomName, socket.username);
 
             removeSocketMetaData();
         }
@@ -171,6 +172,7 @@ io.on('connection', (socket) => {
         }
     });
 });
+
 
 const port = process.env.PORT || 8000;
 
@@ -221,7 +223,7 @@ app.get('/api/history/:page/:rowsPerPage', (req, res) => {
             } else {
                 res.status(200).json({ logs, eventsCount: count });
             }
-        }).select('-_id username message roomName createdAt');
+        }).select('-_id username message roomName createdAt').sort('-createdAt');
     });
 });
 
@@ -273,7 +275,7 @@ app.get('/api/eventlog/:page/:rowsPerPage', (req, res) => {
             } else {
                 res.status(200).json({ logs, eventsCount: count });
             }
-        }).select('-_id type roomName username createdAt');
+        }).select('-_id type roomName username createdAt').sort('-createdAt');
     })
 });
 

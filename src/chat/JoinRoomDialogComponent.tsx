@@ -95,13 +95,13 @@ class JoinRoomDialogComponent extends React.Component<Props, State> {
         this.props.onClose();
     }
 
-    setRoomName(roomName: string) {
+    handleRoomNext(roomName: string) {
         this.setState({
             joinRoomForm: {
                 ...this.state.joinRoomForm,
                 roomName
             }
-        });
+        }, this.handleNext);
     }   
 
     handleUsernameNext() {
@@ -136,7 +136,7 @@ class JoinRoomDialogComponent extends React.Component<Props, State> {
                 }
             })
             .catch(err => {
-                console.log(err);
+                console.error(err);
             });
     }
 
@@ -214,7 +214,7 @@ class JoinRoomDialogComponent extends React.Component<Props, State> {
                                         </Avatar>
                                     </ListItemAvatar>
                                     <ListItemText primary={room.name}></ListItemText>
-                                    <Button onClick={() => this.setRoomName(room.name)}>Select</Button>
+                                    <Button onClick={() => this.handleRoomNext(room.name)}>Select</Button>
                                 </ListItem>
                             );
                         })}
@@ -229,6 +229,12 @@ class JoinRoomDialogComponent extends React.Component<Props, State> {
                             label="Username"
                             value={username}
                             onChange={this.handleUsernameChange.bind(this)}
+                            onKeyPress={(ev) => {
+                                if(ev.key == "Enter") {
+                                    ev.preventDefault();
+                                    this.handleNext();
+                                }
+                            }}
                             type="text"
                             fullWidth
                             error={errors.username.length != 0}
@@ -238,7 +244,7 @@ class JoinRoomDialogComponent extends React.Component<Props, State> {
                 }
 
                 {step == 2 && 
-                    <div className={classes.form}> 
+                    <div className={classes.form}>
                         <TextField
                             className={classes.textField}
                             autoFocus
@@ -262,7 +268,7 @@ class JoinRoomDialogComponent extends React.Component<Props, State> {
                     </div>
                 }
 
-                <div className={classes.stepperActions}>
+                <div className={classes.stepperActions} >
                     <Button onClick={this.handleBack.bind(this)} disabled={step == 0}>Prev</Button>
                     <Button onClick={this.handleNext.bind(this)} disabled={step == 0 && roomName == "" || step == 1 && username == ""} color="secondary">{step != 2 ? "Next" : "Connect"}</Button>
                 </div>

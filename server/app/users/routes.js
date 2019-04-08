@@ -20,8 +20,6 @@ const authorizeUser = (req, res, next) => {
     
     const cert = fs.readFileSync(path.resolve(__dirname) + '/../../private.key');
 
-    console.log(cert);
-
     try {
         const decoded = jwt.verify(token, cert);
         res.locals.user_id = decoded.id;

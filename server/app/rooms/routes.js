@@ -170,6 +170,7 @@ router.post('/getRooms', authorizeUser, (req, res) => {
         Room.find({}, {}, { skip: page * rowsPerPageInt, limit: rowsPerPageInt })
             .populate('user', 'username')
             .select('-password')
+            .sort('-createdAt')
             .exec((err, rooms) => {
                 if(err) {
                     console.trace(err);

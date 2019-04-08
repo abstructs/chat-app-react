@@ -36,6 +36,8 @@ export class ChatService extends Service {
         this.socket.on("newMessage", onMessage);
 
         this.socket.on("roomInactive", () => {
+            this.socket.disconnect();
+            this.socket.connect();
             onDisconnect();
         })
     }

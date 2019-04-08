@@ -34,7 +34,7 @@
     "typescript": "3.3.4000"
   },
   "scripts": {
-    "start": "react-scripts build && node server/index.js",
+    "start": "node server/index.js",
     "dev-start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
